@@ -1,0 +1,26 @@
+# countries.yaml — the scored country set, driver economies, and per-source series
+# mappings that ingestion adapters read. Scope and rationale live in SPEC.md.
+
+scored:
+  south_asia: [PAK, LKA, BGD, NPL, MDV, IND]
+  central_asia_china_sphere: [KAZ, UZB, KGZ, TJK, MNG, LAO]
+
+# Unscored context economies whose rates, FX, and growth drive the scored set.
+drivers: [USA, CHN, EMU, JPN]
+
+# Earliest reference date pulled for any quantitative series.
+# SPEC: these are floors — a series that starts later is documented, never truncated.
+observation_start: "2000-01-01"
+
+series:
+  # FRED series pulled by the fred adapter. country_iso3 "GLB" marks global series.
+  fred:
+    - series_id: BAMLEMCBPIOAS
+      country_iso3: GLB
+      description: ICE BofA EM Corporate Plus Index option-adjusted spread (the free EMBI proxy)
+    - series_id: DTWEXBGS
+      country_iso3: USA
+      description: Nominal broad U.S. dollar index
+    - series_id: VIXCLS
+      country_iso3: USA
+      description: CBOE volatility index

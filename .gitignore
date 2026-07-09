@@ -4,6 +4,15 @@ __pycache__/
 *.pyc
 .DS_Store
 mlruns/
+
+# Local data store — raw/ may hold redistribution-restricted series; never commit.
+data/
+
+# Tool caches and build output.
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+dist/
 CLAUDE.md
 CLAUDE.local.md
 .claude/
