@@ -27,13 +27,18 @@ jobs:
       - run: uv sync --locked
       - name: Seed store from committed public data
         run: uv run python -m sovereign_monitor seed-public
+      # Same failure isolation as the daily workflow: healthy sources always land
+      # and get committed; any failure still turns the run red at the end.
       - name: Ingest macro sources
+        id: ingest
         run: |
+          failed=""
           for source in worldbank_wdi worldbank_ids imf; do
             echo "::group::ingest $source"
-            uv run python -m sovereign_monitor ingest --source "$source"
+            uv run python -m sovereign_monitor ingest --source "$source" || failed="$failed $source"
             echo "::endgroup::"
           done
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
       - name: Validate store and warn about staleness
         run: uv run python -m sovereign_monitor validate
       - name: Export re-publishable subset
@@ -47,3 +52,10 @@ jobs:
             git commit -m "Data: weekly macro ingest $(date -u +%F)"
             git push
           }
+      - name: Fail the run if any source failed
+        if: steps.ingest.outputs.failed != ''
+        env:
+          FAILED: ${{ steps.ingest.outputs.failed }}
+        run: |
+          echo "sovereign-monitor: sources failed:$FAILED" >&2
+          exit 1

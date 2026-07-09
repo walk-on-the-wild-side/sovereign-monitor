@@ -28,16 +28,23 @@ jobs:
       - run: uv sync --locked
       - name: Seed store from committed public data
         run: uv run python -m sovereign_monitor seed-public
+      # One flaky source must not discard the others: every source runs, healthy
+      # batches land and get committed below, and the final step turns any failure
+      # into a red run so endpoint rot stays loud (GDELT 429s from shared runner
+      # IPs are the expected offender).
       - name: Ingest market and news sources
+        id: ingest
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
+          failed=""
           for source in bloomberg_rss occrp central_banks_rss igo_press_rss gdelt \
                         fred frankfurter yfinance; do
             echo "::group::ingest $source"
-            uv run python -m sovereign_monitor ingest --source "$source"
+            uv run python -m sovereign_monitor ingest --source "$source" || failed="$failed $source"
             echo "::endgroup::"
           done
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
       - name: Validate store and warn about staleness
         run: uv run python -m sovereign_monitor validate
       - name: Export re-publishable subset
@@ -51,3 +58,10 @@ jobs:
             git commit -m "Data: daily market/news ingest $(date -u +%F)"
             git push
           }
+      - name: Fail the run if any source failed
+        if: steps.ingest.outputs.failed != ''
+        env:
+          FAILED: ${{ steps.ingest.outputs.failed }}
+        run: |
+          echo "sovereign-monitor: sources failed:$FAILED" >&2
+          exit 1

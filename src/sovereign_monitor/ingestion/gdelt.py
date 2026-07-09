@@ -24,6 +24,28 @@ from sovereign_monitor.ingestion.rss_feeds import finalize_news_frame
 
 REQUEST_SPACING_SECONDS = 6.0  # GDELT's published limit is one request per 5s
 
+# Backoff schedule for 429s. GDELT limits per IP, and shared CI egress IPs
+# (GitHub-hosted runners) are saturated by other users' scrapers — a 429 on the
+# very first request is common there. One query that exhausts its retries aborts
+# the whole batch (fetch is all-or-nothing), so the worst-case wait stays bounded.
+RETRY_DELAYS_SECONDS = (30.0, 75.0, 150.0)
+
+
+def _get_with_backoff(
+    client: httpx.Client, url: str, params: dict[str, Any], log: Any
+) -> httpx.Response:
+    """GET with hard backoff on 429; any other error surfaces immediately."""
+    for delay in RETRY_DELAYS_SECONDS:
+        response = client.get(url, params=params)
+        if response.status_code != httpx.codes.TOO_MANY_REQUESTS:
+            response.raise_for_status()
+            return response
+        log.warning("gdelt rate limited; backing off", wait_seconds=delay)
+        time.sleep(delay)
+    response = client.get(url, params=params)
+    response.raise_for_status()
+    return response
+
 
 class GdeltAdapter(SourceAdapter):
     """Runs the per-country query plan from config/feeds.yaml against the DOC API."""
@@ -51,17 +73,18 @@ class GdeltAdapter(SourceAdapter):
             for position, item in enumerate(plan["queries"]):
                 if position:
                     time.sleep(REQUEST_SPACING_SECONDS)
-                response = client.get(
+                response = _get_with_backoff(
+                    client,
                     self.source.endpoint,
-                    params={
+                    {
                         "query": item["query"],
                         "mode": "artlist",
                         "format": "json",
                         "maxrecords": plan.get("max_records", 75),
                         "timespan": plan.get("timespan", "3d"),
                     },
+                    self.log,
                 )
-                response.raise_for_status()
                 envelope.append({"country_iso3": item["country_iso3"], "body": response.text})
         return json.dumps(envelope).encode("utf-8")
 

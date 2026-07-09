@@ -1,9 +1,12 @@
 """News-layer adapters: recorded feeds parse into schema-valid, link-only rows."""
 
 import json
+import time
 
+import httpx
 import pandas as pd
 import pytest
+import structlog
 
 from sovereign_monitor.configuration import Settings
 from sovereign_monitor.ingestion import (
@@ -65,6 +68,39 @@ def test_gdelt_rows_carry_query_country_tags(registry: Registry, settings: Setti
     assert tags == {("PAK",), ("LKA",)}
     assert curated["published_at"].notna().all()
     assert curated["summary_own"].isna().all()
+
+
+def test_gdelt_backoff_survives_transient_429s(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Shared CI runner IPs make a 429 on the first request routine; the fetch
+    # helper must back off and succeed once the window clears.
+    from sovereign_monitor.ingestion import gdelt as gdelt_module
+
+    attempts = {"count": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            return httpx.Response(429, text="Please limit requests")
+        return httpx.Response(200, json={"articles": []})
+
+    monkeypatch.setattr(time, "sleep", lambda _: None)
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    response = gdelt_module._get_with_backoff(
+        client, "https://api.test/doc", {}, structlog.get_logger()
+    )
+    assert response.status_code == 200
+    assert attempts["count"] == 3
+
+
+def test_gdelt_backoff_eventually_surfaces_429(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sovereign_monitor.ingestion import gdelt as gdelt_module
+
+    monkeypatch.setattr(time, "sleep", lambda _: None)
+    client = httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(429, text="limited"))
+    )
+    with pytest.raises(httpx.HTTPStatusError):
+        gdelt_module._get_with_backoff(client, "https://api.test/doc", {}, structlog.get_logger())
 
 
 def test_gdelt_rate_limit_text_fails_loudly(registry: Registry, settings: Settings) -> None:
