@@ -29,6 +29,13 @@ dev = [
     "pandas-stubs>=2.2",
     "types-pyyaml>=6.0",
 ]
+# Track A only: manual issue pulls run in notebooks/, never imported by the package.
+notebooks = [
+    "matplotlib>=3.9",
+    "yfinance>=0.2.40",
+    "nbclient>=0.10",
+    "ipykernel>=6.29",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -41,6 +48,8 @@ packages = ["src/sovereign_monitor"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
+# Notebooks are exploratory by convention (SPEC: repo structure); don't lint them.
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
