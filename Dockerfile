@@ -10,7 +10,9 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-install-project --no-dev
 COPY README.md ./
 COPY src ./src
-RUN uv sync --locked --no-dev
+# --no-editable: install the package into the venv itself so the runtime stage
+# needs only .venv, not the src tree.
+RUN uv sync --locked --no-dev --no-editable
 
 FROM python:3.12-slim-bookworm AS runtime
 WORKDIR /app
