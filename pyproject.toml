@@ -15,6 +15,9 @@ dependencies = [
     "pydantic-settings>=2.4",
     "structlog>=24.1",
     "pyyaml>=6.0",
+    "yfinance>=0.2.40",
+    "sdmx1>=2.20",
+    "openpyxl>=3.1",
 ]
 
 [project.scripts]
@@ -59,10 +62,13 @@ python_version = "3.12"
 strict = true
 files = ["src", "tests"]
 mypy_path = "src"
+# Map modules from the declared package bases so src/…/__main__.py can never be
+# mistaken for a top-level __main__ module.
+explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-# feedparser ships no type stubs; treat it as untyped rather than failing the build.
-module = ["feedparser"]
+# These libraries ship no type stubs; treat them as untyped rather than fail the build.
+module = ["feedparser", "yfinance", "sdmx", "sdmx.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

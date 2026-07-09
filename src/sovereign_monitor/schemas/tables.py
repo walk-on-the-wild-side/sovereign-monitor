@@ -13,6 +13,18 @@ import pandera.pandas as pa
 OBSERVATION_KEY = ("source_id", "series_id", "country_iso3", "date")
 NEWS_ITEM_KEY = ("source_id", "url_hash")
 
+# Canonical column order for observation frames; adapters build against this.
+OBSERVATION_COLUMNS = [
+    "source_id",
+    "series_id",
+    "country_iso3",
+    "date",
+    "value",
+    "ingested_at",
+    "available_at",
+    "batch_id",
+]
+
 
 def _batch_is_not_empty(frame: pd.DataFrame) -> bool:
     # An empty batch means a fetch or parse regression; fail loudly rather than

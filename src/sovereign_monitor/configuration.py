@@ -25,6 +25,11 @@ class Settings(BaseSettings):
 
     registry_path: Path = Path("data_sources.yaml")
     countries_path: Path = Path("config/countries.yaml")
+    feeds_path: Path = Path("config/feeds.yaml")
+
+    # Committed, licensing-filtered subset of the curated store (open/attribution
+    # sources only) — the durable state scheduled runs build on. See export-public.
+    public_data_directory: Path = Path("public_data")
 
     http_timeout_seconds: float = 30.0
     http_user_agent: str = (

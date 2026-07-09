@@ -1,0 +1,10 @@
+[
+  {
+    "country_iso3": "PAK",
+    "body": "{\"articles\": [{\"url\": \"https://www.dawn.com/news/1918133\", \"url_mobile\": \"\", \"title\": \"Pakistan secures staff-level agreement with IMF on next review\", \"seendate\": \"20260708T063000Z\", \"socialimage\": \"\", \"domain\": \"dawn.com\", \"language\": \"English\", \"sourcecountry\": \"Pakistan\"}, {\"url\": \"https://www.reuters.com/markets/asia/pakistan-bond-rally-2026-07-08/\", \"url_mobile\": \"\", \"title\": \"Pakistan dollar bonds rally on IMF progress\", \"seendate\": \"20260708T091500Z\", \"socialimage\": \"\", \"domain\": \"reuters.com\", \"language\": \"English\", \"sourcecountry\": \"United States\"}]}"
+  },
+  {
+    "country_iso3": "LKA",
+    "body": "{\"articles\": [{\"url\": \"https://www.ft.com/content/sri-lanka-restructuring-milestone\", \"url_mobile\": \"\", \"title\": \"Sri Lanka completes final bilateral debt restructuring step\", \"seendate\": \"20260707T154500Z\", \"socialimage\": \"\", \"domain\": \"ft.com\", \"language\": \"English\", \"sourcecountry\": \"United Kingdom\"}]}"
+  }
+]

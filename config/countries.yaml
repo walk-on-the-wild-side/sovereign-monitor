@@ -1,5 +1,6 @@
 # countries.yaml — the scored country set, driver economies, and per-source series
 # mappings that ingestion adapters read. Scope and rationale live in SPEC.md.
+# Download URLs and dataset choices below were verified live on 2026-07-09.
 
 scored:
   south_asia: [PAK, LKA, BGD, NPL, MDV, IND]
@@ -14,6 +15,8 @@ observation_start: "2000-01-01"
 
 series:
   # FRED series pulled by the fred adapter. country_iso3 "GLB" marks global series.
+  # NOTE (verified 2026-07-09): FRED serves only the trailing ~3 years of ICE BofA
+  # series via the API; VIX and the dollar index honor the 2000 floor.
   fred:
     - series_id: BAMLEMCBPIOAS
       country_iso3: GLB
@@ -24,3 +27,68 @@ series:
     - series_id: VIXCLS
       country_iso3: USA
       description: CBOE volatility index
+
+  # ECB reference rates via Frankfurter: driver-economy FX only (no EM coverage).
+  frankfurter:
+    base: USD
+    quotes:
+      - {symbol: INR, country_iso3: IND}
+      - {symbol: CNY, country_iso3: CHN}
+      - {symbol: JPY, country_iso3: JPN}
+      - {symbol: EUR, country_iso3: EMU}
+
+  # Yahoo Finance (restricted — derive only, raw stays local): EM bond ETFs as
+  # spread/movement proxies plus USD/local pairs for the scored set.
+  yfinance:
+    tickers:
+      - {ticker: EMB, country_iso3: GLB, description: iShares JPM USD EM bond ETF}
+      - {ticker: EMLC, country_iso3: GLB, description: VanEck local-currency EM bond ETF}
+      - {ticker: EMHY, country_iso3: GLB, description: iShares EM high-yield bond ETF}
+      - {ticker: "PKR=X", country_iso3: PAK}
+      - {ticker: "LKR=X", country_iso3: LKA}
+      - {ticker: "BDT=X", country_iso3: BGD}
+      - {ticker: "NPR=X", country_iso3: NPL}
+      - {ticker: "MVR=X", country_iso3: MDV}
+      - {ticker: "INR=X", country_iso3: IND}
+      - {ticker: "KZT=X", country_iso3: KAZ}
+      - {ticker: "UZS=X", country_iso3: UZB}
+      - {ticker: "KGS=X", country_iso3: KGZ}  # stale on Yahoo since 2025-09; kept for history
+      - {ticker: "TJS=X", country_iso3: TJK}
+      - {ticker: "MNT=X", country_iso3: MNG}
+      - {ticker: "LAK=X", country_iso3: LAO}
+
+  # World Bank WDI (CC BY-4.0): annual macro + external-debt stock indicators.
+  # Annual data for year Y becomes available ~mid-year Y+1 (leakage rule).
+  worldbank_wdi:
+    indicators:
+      - {code: FI.RES.TOTL.MO, description: reserves in months of imports}
+      - {code: FI.RES.TOTL.CD, description: total reserves, USD}
+      - {code: NY.GDP.MKTP.KD.ZG, description: real GDP growth, percent}
+      - {code: FP.CPI.TOTL.ZG, description: CPI inflation, percent}
+      - {code: BN.CAB.XOKA.GD.ZS, description: current account, percent of GDP}
+      - {code: DT.DOD.DECT.CD, description: external debt stock, USD}
+      - {code: DT.TDS.DPPG.XP.ZS, description: PPG debt service, percent of exports}
+
+  # World Bank IDS (CC BY-4.0): creditor-dimension series via the sources/6 API.
+  # Counterpart 730 = China — the debt-to-China exposure series.
+  worldbank_ids:
+    counterpart_series:
+      - {series: DT.DOD.BLAT.CD, counterpart: "730", suffix: CHN,
+         description: bilateral external debt owed to China, USD}
+
+  # IMF new data portal (SDMX 2.1, flow IRFCL): monthly official reserves detail,
+  # Table 1 indicator family. Coverage is per-country (IND/KAZ report, PAK does not).
+  imf:
+    flow: IRFCL
+    indicator_prefix: IRFCLDT1_
+    frequency: M
+
+  # ND-GAIN country index (attribution): zip release, annual scores ~18 months lagged.
+  nd_gain:
+    download_url: https://gain.nd.edu/assets/647440/ndgain_countryindex_2026.zip
+
+  # AidData GCDF v3 (attribution): project-level Chinese lending 2000-2021,
+  # released 2023-11 — every row's available_at is the release date.
+  aiddata:
+    download_url: https://docs.aiddata.org/ad4/datasets/AidDatas_Global_Chinese_Development_Finance_Dataset_Version_3_0.zip
+    release_date: "2023-11-01"

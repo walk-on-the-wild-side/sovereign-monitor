@@ -1,0 +1,49 @@
+# ingest_macro.yml — weekly pull of slow-moving macro/debt sources (SPEC stage B1).
+# Same seed → ingest → validate → export → commit shape as the daily workflow.
+# ND-GAIN and AidData are on_release sources: run manually, never scheduled.
+name: ingest-macro
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install
+      - run: uv sync --locked
+      - name: Seed store from committed public data
+        run: uv run python -m sovereign_monitor seed-public
+      - name: Ingest macro sources
+        run: |
+          for source in worldbank_wdi worldbank_ids imf; do
+            echo "::group::ingest $source"
+            uv run python -m sovereign_monitor ingest --source "$source"
+            echo "::endgroup::"
+          done
+      - name: Validate store and warn about staleness
+        run: uv run python -m sovereign_monitor validate
+      - name: Export re-publishable subset
+        run: uv run python -m sovereign_monitor export-public
+      - name: Commit refreshed public data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public_data
+          git diff --staged --quiet || {
+            git commit -m "Data: weekly macro ingest $(date -u +%F)"
+            git push
+          }

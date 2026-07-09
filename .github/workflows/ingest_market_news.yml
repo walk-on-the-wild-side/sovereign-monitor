@@ -1,0 +1,53 @@
+# ingest_market_news.yml — daily pull of market and news sources (SPEC stage B1).
+# The runner is ephemeral: it seeds its store from committed public_data/, ingests,
+# validates, and commits the refreshed re-publishable subset back. Restricted raw
+# values (FRED ICE BofA, yfinance) exist only inside the run and are never committed.
+name: ingest-market-news
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install
+      - run: uv sync --locked
+      - name: Seed store from committed public data
+        run: uv run python -m sovereign_monitor seed-public
+      - name: Ingest market and news sources
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          for source in bloomberg_rss occrp central_banks_rss igo_press_rss gdelt \
+                        fred frankfurter yfinance; do
+            echo "::group::ingest $source"
+            uv run python -m sovereign_monitor ingest --source "$source"
+            echo "::endgroup::"
+          done
+      - name: Validate store and warn about staleness
+        run: uv run python -m sovereign_monitor validate
+      - name: Export re-publishable subset
+        run: uv run python -m sovereign_monitor export-public
+      - name: Commit refreshed public data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public_data
+          git diff --staged --quiet || {
+            git commit -m "Data: daily market/news ingest $(date -u +%F)"
+            git push
+          }

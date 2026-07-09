@@ -23,12 +23,12 @@
 #   theme_tags    : quick filters for the dashboard
 #   notes         : caveats, keys, gotchas
 #
-# meta.last_reviewed: 2026-06-30  (re-verify endpoints quarterly)
+# meta.last_reviewed: 2026-07-09  (re-verify endpoints quarterly)
 # =============================================================================
 
 meta:
   schema_version: 1
-  last_reviewed: 2026-06-30
+  last_reviewed: 2026-07-09
   review_cadence: quarterly
   principles:
     - "Free/open only. Paywalled sources (Bloomberg Data License, SWFI, Global SWF) are excluded by design."
@@ -81,7 +81,10 @@ sources:
     cadence: hourly
     redistribution: link_only
     theme_tags: [bonds, fx, war, empire]
-    notes: "Reuters native feeds are dead (2026). Domain-scoped Google News query is the workaround; swap allinurl: domain to follow any outlet."
+    notes: >
+      BROKEN, verified 2026-07-09: Google News allinurl:/site: domain-scoped queries
+      now return zero items, so this workaround is dead. Source disabled (no adapter);
+      Reuters coverage arrives via GDELT until a new workaround is found.
 
   - id: occrp
     name: OCCRP (Organized Crime & Corruption Reporting Project)
@@ -89,12 +92,15 @@ sources:
     category: investigations
     provides: Investigations on corruption, sanctions, kleptocracy, money laundering, power & influence
     access: rss
-    endpoint: https://www.occrp.org/en/rss-listing
+    endpoint: https://www.occrp.org/en/feed
     auth: none
     cadence: daily
     redistribution: link_only
     theme_tags: [empire, culture, sanctions]
-    notes: "Subscribe only to relevant beats (Sanctions, Power and Influence, Money Laundering, Kleptocracy)."
+    notes: >
+      Endpoint corrected 2026-07-09: /en/rss-listing is an HTML page; /en/feed is the
+      live RSS. Per-beat feeds (Sanctions, Power and Influence, Money Laundering,
+      Kleptocracy) can be added in config/feeds.yaml when verified.
 
   - id: regional_geopolitics
     name: Regional / geopolitics outlets
@@ -115,12 +121,15 @@ sources:
     category: policy
     provides: Rate decisions, statements, FX interventions
     access: rss
-    endpoint: https://www.sbp.org.pk
+    endpoint: https://rbi.org.in/pressreleases_rss.xml
     auth: none
     cadence: daily
     redistribution: link_only
     theme_tags: [fx, sovereign]
-    notes: "State Bank of Pakistan, RBI (India), Nepal Rastra Bank, Bangladesh Bank, and Central Asian central banks. Most have native RSS; confirm per-bank endpoints."
+    notes: >
+      Feed list lives in config/feeds.yaml. Verified 2026-07-09: RBI native RSS works;
+      SBP (Pakistan) is bot-walled (403) to plain HTTP clients. Other banks pending
+      per-bank verification before being added.
 
   - id: igo_press_rss
     name: IMF / World Bank / ADB / BIS press & research feeds
@@ -128,12 +137,15 @@ sources:
     category: institutional
     provides: Program news, debt-sustainability analyses, reviews, research
     access: rss
-    endpoint: https://www.imf.org
+    endpoint: https://feeds.feedburner.com/adb_news
     auth: none
     cadence: daily
     redistribution: link_only
     theme_tags: [sovereign, empire]
-    notes: "High-signal for sovereign-debt events (programs, DSAs, reviews). Confirm each institution's feed URL."
+    notes: >
+      Feed list lives in config/feeds.yaml. Verified 2026-07-09: ADB via FeedBurner
+      works; IMF and BIS press feeds are dead or bot-walled (403/404), World Bank news
+      RSS is 404. IMF/WB program news arrives via GDELT until native feeds return.
 
 # -----------------------------------------------------------------------------
 # QUANTITATIVE LAYER — markets / prices
@@ -158,12 +170,15 @@ sources:
     category: fx
     provides: Daily FX rates (majors + some EM), historical and latest
     access: api
-    endpoint: https://api.frankfurter.app
+    endpoint: https://api.frankfurter.dev/v1
     auth: none
     cadence: daily
     redistribution: open
     theme_tags: [fx]
-    notes: "ECB reference rates. Good for majors; EM coverage limited — supplement with central-bank and IMF rates."
+    notes: >
+      ECB reference rates. Good for majors; EM coverage limited — supplement with
+      central-bank and IMF rates. Endpoint updated 2026-07-09: api.frankfurter.app
+      now 301-redirects to api.frankfurter.dev/v1.
 
   - id: yfinance
     name: Yahoo Finance (via yfinance)
@@ -214,12 +229,17 @@ sources:
     category: macro_debt
     provides: Growth, reserves, exchange rates, program status, debt-sustainability analyses
     access: sdmx
-    endpoint: https://data.imf.org
+    endpoint: https://api.imf.org/external/sdmx/2.1
     auth: none
     cadence: monthly
     redistribution: attribution
     theme_tags: [sovereign, fx, empire]
-    notes: "SDMX/JSON. Lending-arrangement + DSA data is core to a sovereign-distress narrative. Verify current SDMX endpoint."
+    notes: >
+      Endpoint verified 2026-07-09: new IMF data portal SDMX 2.1 API (sdmx1 source
+      IMF_DATA). Legacy dataservices.imf.org is dead and IFS was decommissioned —
+      flows are renamed (IRFCL reserves, ER exchange rates, BOP, COFER). IRFCL
+      coverage is per-country (IND/KAZ report; PAK does not). Lending-arrangement +
+      DSA data still needs a wiring plan.
 
   - id: worldbank_wdi
     name: World Bank WDI

@@ -13,10 +13,15 @@ import pandera.errors
 
 from sovereign_monitor import __version__
 from sovereign_monitor.configuration import Settings
-from sovereign_monitor.ingestion import ADAPTERS, IngestionConfigurationError
+from sovereign_monitor.ingestion import (
+    ADAPTERS,
+    IngestionConfigurationError,
+    IngestionRuntimeError,
+)
 from sovereign_monitor.logging_setup import configure_logging
 from sovereign_monitor.registry import load_registry
 from sovereign_monitor.schemas import TABLES
+from sovereign_monitor.storage import export_public_subset, seed_curated_from_public
 
 PROGRAM = "sovereign-monitor"
 
@@ -26,6 +31,21 @@ DEFERRED_COMMANDS = {
     "signals": "B3",
     "surveil": "B4",
     "export": "B5",
+}
+
+# Freshness thresholds per registry cadence, in days (SPEC: validation rules).
+# Warnings only in B1; B4 turns staleness into dashboard alerts. Low-frequency
+# sources get slack for publication lag: annual datasets (WDI, IDS, ND-GAIN)
+# normally trail their reference year by 12-20 months, monthly reserves by 1-2
+# months. on_release and ad_hoc sources are never stale by definition.
+CADENCE_MAX_AGE_DAYS = {
+    "15min-hourly": 2,
+    "hourly": 2,
+    "daily": 4,
+    "weekly": 10,
+    "monthly": 75,
+    "quarterly": 800,
+    "annual": 800,
 }
 
 
@@ -40,7 +60,17 @@ def build_parser() -> argparse.ArgumentParser:
     ingest = subparsers.add_parser("ingest", help="pull one source into the local store")
     ingest.add_argument("--source", required=True, choices=sorted(ADAPTERS))
 
-    subparsers.add_parser("validate", help="re-validate the curated store against the schemas")
+    subparsers.add_parser(
+        "validate", help="re-validate the curated store and warn about stale sources"
+    )
+    subparsers.add_parser(
+        "export-public",
+        help="write the re-publishable subset of the store to public_data/",
+    )
+    subparsers.add_parser(
+        "seed-public",
+        help="seed an empty curated store from committed public_data/ (CI startup)",
+    )
 
     for name, stage in DEFERRED_COMMANDS.items():
         subparsers.add_parser(name, help=f"not implemented until stage {stage}")
@@ -59,7 +89,7 @@ def run_ingest(source_id: str, settings: Settings) -> int:
     adapter = ADAPTERS[source_id](registry.sources[source_id], settings)
     try:
         result = adapter.run()
-    except IngestionConfigurationError as error:
+    except (IngestionConfigurationError, IngestionRuntimeError) as error:
         return _fail(str(error))
     except httpx.HTTPError as error:
         return _fail(f"fetch failed for {source_id}: {error}")
@@ -69,7 +99,7 @@ def run_ingest(source_id: str, settings: Settings) -> int:
 
 
 def run_validate(settings: Settings) -> int:
-    """Re-check every curated table against its schema; useful after manual edits."""
+    """Re-check every curated table against its schema, then warn about staleness."""
     exit_code = 0
     for specification in TABLES.values():
         table_path = settings.data_directory / "curated" / specification.file_name
@@ -85,7 +115,47 @@ def run_validate(settings: Settings) -> int:
             )
         else:
             print(f"{specification.name}: {len(frame)} rows valid")
+    warn_about_stale_sources(settings)
     return exit_code
+
+
+def warn_about_stale_sources(settings: Settings) -> int:
+    """Print a warning per source whose newest record exceeds its cadence threshold."""
+    registry = load_registry(settings.registry_path)
+    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    warnings = 0
+
+    newest_by_source: dict[str, pd.Timestamp] = {}
+    observations_path = settings.data_directory / "curated" / "observations.parquet"
+    if observations_path.exists():
+        observations = pd.read_parquet(observations_path)
+        newest_dates = observations.groupby("source_id")["date"].max()
+        newest_by_source.update(
+            {str(source): pd.Timestamp(when) for source, when in newest_dates.items()}
+        )
+    news_path = settings.data_directory / "curated" / "news_items.parquet"
+    if news_path.exists():
+        news_items = pd.read_parquet(news_path)
+        newest_news = news_items.groupby("source_id")["published_at"].max().dt.tz_localize(None)
+        newest_by_source.update(
+            {str(source): pd.Timestamp(when) for source, when in newest_news.items()}
+        )
+
+    for source_id, newest_date in sorted(newest_by_source.items()):
+        source = registry.sources.get(source_id)
+        if source is None:
+            continue
+        threshold = CADENCE_MAX_AGE_DAYS.get(source.cadence)
+        if threshold is None or pd.isna(newest_date):
+            continue
+        age_days = (today - newest_date.normalize()).days
+        if age_days > threshold:
+            warnings += 1
+            print(
+                f"{PROGRAM}: warning: {source_id} newest record is {age_days} days old "
+                f"(cadence {source.cadence}, threshold {threshold}d)"
+            )
+    return warnings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,6 +167,16 @@ def main(argv: list[str] | None = None) -> int:
         return run_ingest(arguments.source, settings)
     if arguments.command == "validate":
         return run_validate(settings)
+    if arguments.command == "export-public":
+        exported = export_public_subset(settings)
+        for table_name, row_count in exported.items():
+            print(f"exported {table_name}: {row_count} rows")
+        return 0
+    if arguments.command == "seed-public":
+        seeded = seed_curated_from_public(settings)
+        for table_name, row_count in seeded.items():
+            print(f"seeded {table_name}: {row_count} rows")
+        return 0
     stage = DEFERRED_COMMANDS[arguments.command]
     print(
         f"{PROGRAM}: {arguments.command} is not implemented until stage {stage} (see SPEC.md)",

@@ -1,0 +1,53 @@
+# feeds.yaml — feed lists for multi-feed news sources and GDELT query plans.
+# Every feed URL here was verified live on 2026-07-09; verification notes live in
+# data_sources.yaml. Licensing for all of these is link_only: headlines + links
+# + our own summary, never article bodies.
+
+occrp:
+  - outlet: OCCRP
+    url: https://www.occrp.org/en/feed
+
+central_banks_rss:
+  # RBI native RSS verified. SBP (Pakistan) is bot-walled (403) to plain HTTP
+  # clients; Nepal Rastra Bank / Bangladesh Bank / Central Asian banks pending
+  # per-bank verification before being added.
+  - outlet: Reserve Bank of India
+    url: https://rbi.org.in/pressreleases_rss.xml
+
+igo_press_rss:
+  # ADB via FeedBurner verified. IMF and BIS press feeds are dead or bot-walled,
+  # World Bank news RSS is 404 (all checked 2026-07-09) — their program news
+  # arrives via GDELT until native feeds return.
+  - outlet: Asian Development Bank
+    url: https://feeds.feedburner.com/adb_news
+
+# GDELT DOC API query plan: one focused query per scored country, spaced >5s
+# apart (GDELT rate limit). Query terms target sovereign-stress coverage.
+gdelt:
+  timespan: 3d
+  max_records: 75
+  queries:
+    - country_iso3: PAK
+      query: '"Pakistan" (debt OR default OR IMF OR bond OR rupee OR reserves OR bailout)'
+    - country_iso3: LKA
+      query: '"Sri Lanka" (debt OR default OR IMF OR bond OR rupee OR reserves)'
+    - country_iso3: BGD
+      query: '"Bangladesh" (debt OR default OR IMF OR bond OR taka OR reserves)'
+    - country_iso3: NPL
+      query: '"Nepal" (debt OR default OR IMF OR bond OR rupee OR reserves)'
+    - country_iso3: MDV
+      query: '"Maldives" (debt OR default OR IMF OR bond OR rufiyaa OR reserves OR sukuk)'
+    - country_iso3: IND
+      query: '"India" (sovereign debt OR "external debt" OR RBI OR rupee OR "bond yield")'
+    - country_iso3: KAZ
+      query: '"Kazakhstan" (debt OR default OR IMF OR bond OR tenge OR reserves)'
+    - country_iso3: UZB
+      query: '"Uzbekistan" (debt OR default OR IMF OR bond OR som OR reserves)'
+    - country_iso3: KGZ
+      query: '"Kyrgyzstan" (debt OR default OR IMF OR bond OR som OR reserves)'
+    - country_iso3: TJK
+      query: '"Tajikistan" (debt OR default OR IMF OR bond OR somoni OR reserves)'
+    - country_iso3: MNG
+      query: '"Mongolia" (debt OR default OR IMF OR bond OR tugrik OR reserves)'
+    - country_iso3: LAO
+      query: '"Laos" (debt OR default OR IMF OR bond OR kip OR reserves OR China)'
