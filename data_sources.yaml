@@ -1,0 +1,433 @@
+# =============================================================================
+# OPEN DATA & NEWS SOURCE REGISTRY
+# Sovereign debt / currency / bond-market monitor — South & Central Asia,
+# China's sphere of influence, and the major economies that shape them.
+#
+# Purpose: single canonical record of FREE / OPEN sources. Drives (1) ingestion
+# config and (2) the dashboard. Also serves as the data-licensing register.
+#
+# Field schema (per source):
+#   id            : stable slug used in code/config
+#   name          : human-readable name
+#   layer         : news | quant            (which ingestion pattern it feeds)
+#   category      : domain grouping
+#   provides      : what you actually get
+#   access        : api | rss | sdmx | bulk_csv | scrape
+#   endpoint      : canonical base URL (VERIFY exact path before wiring — endpoints rot)
+#   auth          : none | free_key | apply | registration
+#   cadence       : suggested poll/pull frequency
+#   redistribution: open | attribution | link_only | restricted
+#                   (open=re-publishable; attribution=cite source; link_only=store
+#                    metadata+link+your own summary, NOT full text; restricted=view/
+#                    derive only, do not re-host the dataset)
+#   theme_tags    : quick filters for the dashboard
+#   notes         : caveats, keys, gotchas
+#
+# meta.last_reviewed: 2026-06-30  (re-verify endpoints quarterly)
+# =============================================================================
+
+meta:
+  schema_version: 1
+  last_reviewed: 2026-06-30
+  review_cadence: quarterly
+  principles:
+    - "Free/open only. Paywalled sources (Bloomberg Data License, SWFI, Global SWF) are excluded by design."
+    - "For news: store metadata + link + your own summary. Never store or republish full article bodies."
+    - "Spreads: no free EMBI/CEMBI exists. Use FRED ICE BofA EM OAS as the index proxy and EM bond-ETF prices for movement, and SAY SO in methodology."
+    - "Keep this file as the single source of truth; export to CSV/JSON for the dashboard as needed."
+
+# -----------------------------------------------------------------------------
+# NEWS & EVENT MONITORING LAYER (polled through the week, feeds commentary)
+# -----------------------------------------------------------------------------
+sources:
+
+  - id: gdelt
+    name: GDELT 2.0 (Events + Global Knowledge Graph)
+    layer: news
+    category: global_event_monitoring
+    provides: Global news events, entities, themes, tone; updated ~every 15 min across thousands of outlets and languages
+    access: api
+    endpoint: https://api.gdeltproject.org/api/v2/doc/doc
+    auth: none
+    cadence: 15min-hourly
+    redistribution: open          # GDELT data tables are open; underlying article text is NOT
+    theme_tags: [empire, war, culture, sovereign, fx]
+    notes: >
+      Monitoring backbone — sidesteps single-publisher RSS limits. Query by country,
+      theme, tone. Raw bulk files also downloadable. Store GDELT-derived fields freely;
+      do not re-host the source articles' text.
+
+  - id: bloomberg_rss
+    name: Bloomberg public RSS (Markets, Businessweek)
+    layer: news
+    category: markets_news
+    provides: Headlines + links for markets and Businessweek
+    access: rss
+    endpoint: https://feeds.bloomberg.com/markets/news.rss
+    auth: none
+    cadence: hourly
+    redistribution: link_only
+    theme_tags: [bonds, fx, commodities]
+    notes: "Also /businessweek/news.rss. Verified live 2026. Headlines/links only — paid Data License is a separate product you do NOT need."
+
+  - id: reuters_via_gnews
+    name: Reuters (via Google News RSS query)
+    layer: news
+    category: markets_news
+    provides: Reuters articles from last 24h as a generated feed
+    access: rss
+    endpoint: "https://news.google.com/rss/search?q=when:24h+allinurl:reuters.com&hl=en-US&gl=US&ceid=US:en"
+    auth: none
+    cadence: hourly
+    redistribution: link_only
+    theme_tags: [bonds, fx, war, empire]
+    notes: "Reuters native feeds are dead (2026). Domain-scoped Google News query is the workaround; swap allinurl: domain to follow any outlet."
+
+  - id: occrp
+    name: OCCRP (Organized Crime & Corruption Reporting Project)
+    layer: news
+    category: investigations
+    provides: Investigations on corruption, sanctions, kleptocracy, money laundering, power & influence
+    access: rss
+    endpoint: https://www.occrp.org/en/rss-listing
+    auth: none
+    cadence: daily
+    redistribution: link_only
+    theme_tags: [empire, culture, sanctions]
+    notes: "Subscribe only to relevant beats (Sanctions, Power and Influence, Money Laundering, Kleptocracy)."
+
+  - id: regional_geopolitics
+    name: Regional / geopolitics outlets
+    layer: news
+    category: regional_analysis
+    provides: Asia-focused analysis (The Diplomat, Nikkei Asia, Dawn, etc.)
+    access: rss
+    endpoint: https://thediplomat.com/feed/
+    auth: none
+    cadence: daily
+    redistribution: link_only
+    theme_tags: [empire, war, culture]
+    notes: "Add Nikkei Asia, Dawn (Pakistan), and other regional outlets. Verify each native feed; fall back to the Google News query trick where dead."
+
+  - id: central_banks_rss
+    name: National central bank press feeds
+    layer: news
+    category: policy
+    provides: Rate decisions, statements, FX interventions
+    access: rss
+    endpoint: https://www.sbp.org.pk
+    auth: none
+    cadence: daily
+    redistribution: link_only
+    theme_tags: [fx, sovereign]
+    notes: "State Bank of Pakistan, RBI (India), Nepal Rastra Bank, Bangladesh Bank, and Central Asian central banks. Most have native RSS; confirm per-bank endpoints."
+
+  - id: igo_press_rss
+    name: IMF / World Bank / ADB / BIS press & research feeds
+    layer: news
+    category: institutional
+    provides: Program news, debt-sustainability analyses, reviews, research
+    access: rss
+    endpoint: https://www.imf.org
+    auth: none
+    cadence: daily
+    redistribution: link_only
+    theme_tags: [sovereign, empire]
+    notes: "High-signal for sovereign-debt events (programs, DSAs, reviews). Confirm each institution's feed URL."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — markets / prices
+# -----------------------------------------------------------------------------
+
+  - id: fred
+    name: FRED (St. Louis Fed)
+    layer: quant
+    category: markets_rates_spreads
+    provides: USD index, oil (WTI/Brent), VIX, US Treasury curve, ICE BofA EM OAS spread indices (e.g. BAMLEMCBPIOAS)
+    access: api
+    endpoint: https://api.stlouisfed.org/fred
+    auth: free_key
+    cadence: daily
+    redistribution: restricted     # ICE BofA index series: free to view/derive, redistribution restricted
+    theme_tags: [bonds, fx, commodities]
+    notes: "EM OAS series = your free spread proxy (no free EMBI exists). NOTE: ICE BofA series carry redistribution restrictions — chart/derive, don't re-host the raw series."
+
+  - id: frankfurter
+    name: Frankfurter / exchangerate.host (ECB-based FX)
+    layer: quant
+    category: fx
+    provides: Daily FX rates (majors + some EM), historical and latest
+    access: api
+    endpoint: https://api.frankfurter.app
+    auth: none
+    cadence: daily
+    redistribution: open
+    theme_tags: [fx]
+    notes: "ECB reference rates. Good for majors; EM coverage limited — supplement with central-bank and IMF rates."
+
+  - id: yfinance
+    name: Yahoo Finance (via yfinance)
+    layer: quant
+    category: markets_prices
+    provides: FX pairs, EM bond ETFs (EMB, EMLC, EMHY), equity indices
+    access: scrape
+    endpoint: https://pypi.org/project/yfinance/
+    auth: none
+    cadence: daily
+    redistribution: restricted
+    theme_tags: [bonds, fx]
+    notes: "Unofficial; respect Yahoo ToS; treat as best-effort, NOT a redistributable dataset. Use for movement/levels, not for re-hosting."
+
+  - id: wb_pinksheet
+    name: World Bank Commodity Markets (Pink Sheet)
+    layer: quant
+    category: commodities
+    provides: Monthly commodity price series
+    access: bulk_csv
+    endpoint: https://www.worldbank.org/en/research/commodity-markets
+    auth: none
+    cadence: monthly
+    redistribution: attribution
+    theme_tags: [commodities]
+    notes: "CSV/XLSX download (CMO 'Pink Sheet')."
+
+  - id: eia
+    name: U.S. EIA (energy)
+    layer: quant
+    category: commodities
+    provides: Oil/energy price and supply series
+    access: api
+    endpoint: https://api.eia.gov
+    auth: free_key
+    cadence: daily
+    redistribution: open
+    theme_tags: [commodities, war]
+    notes: "Free key. Useful for oil shocks tied to conflict narratives."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — macro & external debt
+# -----------------------------------------------------------------------------
+
+  - id: imf
+    name: IMF (WEO, IFS, lending arrangements, DSAs)
+    layer: quant
+    category: macro_debt
+    provides: Growth, reserves, exchange rates, program status, debt-sustainability analyses
+    access: sdmx
+    endpoint: https://data.imf.org
+    auth: none
+    cadence: monthly
+    redistribution: attribution
+    theme_tags: [sovereign, fx, empire]
+    notes: "SDMX/JSON. Lending-arrangement + DSA data is core to a sovereign-distress narrative. Verify current SDMX endpoint."
+
+  - id: worldbank_wdi
+    name: World Bank WDI
+    layer: quant
+    category: macro
+    provides: Broad macro/development indicators
+    access: api
+    endpoint: https://api.worldbank.org/v2
+    auth: none
+    cadence: monthly
+    redistribution: attribution
+    theme_tags: [sovereign, culture]
+    notes: "Clean REST API, no key."
+
+  - id: worldbank_ids
+    name: World Bank International Debt Statistics (IDS)
+    layer: quant
+    category: external_debt
+    provides: External debt by creditor, including bilateral exposure to China
+    access: api
+    endpoint: https://api.worldbank.org/v2
+    auth: none
+    cadence: quarterly
+    redistribution: attribution
+    theme_tags: [sovereign, empire]
+    notes: "Gold for the China-sphere theme — creditor breakdowns. Served via the World Bank API (IDS source)."
+
+  - id: bis
+    name: Bank for International Settlements (BIS)
+    layer: quant
+    category: macro_rates
+    provides: Effective exchange rates, credit, debt securities statistics
+    access: sdmx
+    endpoint: https://data.bis.org
+    auth: none
+    cadence: monthly
+    redistribution: attribution
+    theme_tags: [fx, bonds]
+    notes: "SDMX/CSV. Effective exchange rates useful for FX-stress signals."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — China-sphere / geoeconomics
+# -----------------------------------------------------------------------------
+
+  - id: aiddata_gcdf
+    name: AidData — Global Chinese Development Finance
+    layer: quant
+    category: geoeconomics
+    provides: Project-level Chinese overseas lending/grants
+    access: bulk_csv
+    endpoint: https://www.aiddata.org/data
+    auth: none
+    cadence: on_release
+    redistribution: attribution
+    theme_tags: [empire, sovereign]
+    notes: "CC BY. Best open dataset for 'China's sphere of influence'. Download the LATEST version."
+
+  - id: bu_gdp_center
+    name: Boston University Global Development Policy Center
+    layer: quant
+    category: geoeconomics
+    provides: China overseas lending databases (sovereign loans, energy finance)
+    access: bulk_csv
+    endpoint: https://www.bu.edu/gdp/
+    auth: none
+    cadence: on_release
+    redistribution: attribution
+    theme_tags: [empire, sovereign]
+    notes: "Complements AidData with sectoral/energy lending detail."
+
+  - id: lowy
+    name: Lowy Institute (Asia Power Index, Pacific Aid Map)
+    layer: quant
+    category: geoeconomics
+    provides: Influence and aid indices
+    access: bulk_csv
+    endpoint: https://www.lowyinstitute.org
+    auth: none
+    cadence: on_release
+    redistribution: attribution
+    theme_tags: [empire, culture]
+    notes: "Public influence/aid indices; good structural context layer."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — climate / physical risk
+# -----------------------------------------------------------------------------
+
+  - id: nasa_power
+    name: NASA POWER
+    layer: quant
+    category: climate
+    provides: Daily temperature/heat and solar data by lat-long
+    access: api
+    endpoint: https://power.larc.nasa.gov/api/
+    auth: none
+    cadence: daily
+    redistribution: open
+    theme_tags: [culture, war]
+    notes: "Your 'heat' input. No key."
+
+  - id: nd_gain
+    name: ND-GAIN Country Index
+    layer: quant
+    category: climate
+    provides: Climate vulnerability + readiness scores by country
+    access: bulk_csv
+    endpoint: https://gain.nd.edu/our-work/country-index/
+    auth: none
+    cadence: annual
+    redistribution: attribution
+    theme_tags: [sovereign, culture]
+    notes: "Slots directly into a composite vulnerability index."
+
+  - id: emdat
+    name: EM-DAT (disaster database)
+    layer: quant
+    category: climate
+    provides: Disaster event records
+    access: bulk_csv
+    endpoint: https://public.emdat.be
+    auth: registration
+    cadence: on_release
+    redistribution: restricted
+    theme_tags: [war, culture]
+    notes: "Free with registration; redistribution restricted — derive, don't re-host."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — inequality / wealth / sovereign funds
+# -----------------------------------------------------------------------------
+
+  - id: wid
+    name: World Inequality Database (WID.world)
+    layer: quant
+    category: inequality
+    provides: Income/wealth inequality (top shares, distributional series)
+    access: api
+    endpoint: https://wid.world
+    auth: none
+    cadence: annual
+    redistribution: attribution
+    theme_tags: [culture, empire]
+    notes: "API + R/Python access (wid package)."
+
+  - id: wb_pip
+    name: World Bank Poverty & Inequality Platform (PIP)
+    layer: quant
+    category: inequality
+    provides: Poverty and inequality estimates
+    access: api
+    endpoint: https://pip.worldbank.org
+    auth: none
+    cadence: annual
+    redistribution: attribution
+    theme_tags: [culture]
+    notes: "API available."
+
+  - id: swf_open
+    name: Sovereign wealth funds (open fragments)
+    layer: quant
+    category: sovereign_funds
+    provides: IFSWF member list + individual fund annual reports
+    access: scrape
+    endpoint: https://www.ifswf.org
+    auth: none
+    cadence: annual
+    redistribution: link_only
+    theme_tags: [empire, sovereign]
+    notes: "GAP: granular SWF holdings are paywalled (SWFI, Global SWF). Only fund annual reports + IFSWF membership are genuinely open."
+
+# -----------------------------------------------------------------------------
+# QUANTITATIVE LAYER — sanctions / entities
+# -----------------------------------------------------------------------------
+
+  - id: ofac_sdn
+    name: OFAC SDN list (+ EU consolidated list)
+    layer: quant
+    category: sanctions
+    provides: Official sanctions designations
+    access: bulk_csv
+    endpoint: https://sanctionslist.ofac.treas.gov
+    auth: none
+    cadence: daily
+    redistribution: open
+    theme_tags: [empire, war, sanctions]
+    notes: "Structured (XML/CSV), updated frequently. Pair with the EU consolidated sanctions list."
+
+  - id: opensanctions
+    name: OpenSanctions
+    layer: quant
+    category: sanctions
+    provides: Consolidated sanctions / PEP / entity graph
+    access: api
+    endpoint: https://www.opensanctions.org
+    auth: none
+    cadence: daily
+    redistribution: attribution
+    theme_tags: [empire, sanctions]
+    notes: "Free bulk + API, open license. Bulk downloads at data.opensanctions.org."
+
+  - id: occrp_aleph
+    name: OCCRP Aleph
+    layer: quant
+    category: entities
+    provides: 4B+ document archive, entity search
+    access: api
+    endpoint: https://aleph.occrp.org
+    auth: apply
+    cadence: ad_hoc
+    redistribution: restricted
+    theme_tags: [empire, culture, sanctions]
+    notes: "Free for qualifying journalists/researchers; apply for access. Not open data — research use."
