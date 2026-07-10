@@ -70,6 +70,49 @@ def test_gdelt_rows_carry_query_country_tags(registry: Registry, settings: Setti
     assert curated["summary_own"].isna().all()
 
 
+def _export_line(country_fips: str, url: str, tone: str, date_added: str) -> str:
+    from sovereign_monitor.ingestion import gdelt as gdelt_module
+
+    fields = [""] * gdelt_module.EXPORT_FIELD_COUNT
+    fields[gdelt_module.FIELD_ACTION_GEO_COUNTRY] = country_fips
+    fields[gdelt_module.FIELD_SOURCE_URL] = url
+    fields[gdelt_module.FIELD_AVERAGE_TONE] = tone
+    fields[gdelt_module.FIELD_DATE_ADDED] = date_added
+    return "\t".join(fields)
+
+
+def test_gdelt_bulk_export_filters_and_parses(registry: Registry, settings: Settings) -> None:
+    from sovereign_monitor.ingestion import gdelt as gdelt_module
+
+    csv_bytes = "\n".join(
+        [
+            _export_line(
+                "PK", "https://www.dawn.com/news/debt-talks-resume-1231", "-3.2", "20260709120000"
+            ),
+            _export_line("US", "https://example.com/out-of-scope", "1.0", "20260709120000"),
+            "short\trow",  # malformed line: skipped, never fatal
+        ]
+    ).encode("utf-8")
+
+    rows = gdelt_module.rows_from_export_csv(csv_bytes)
+    assert len(rows) == 1
+    assert rows[0]["country_iso3"] == "PAK"
+
+    payload = json.dumps({"mode": "bulk", "rows": rows}).encode("utf-8")
+    adapter = GdeltAdapter(registry.sources["gdelt"], settings)
+    result = adapter.run(payload=payload)
+    assert not result.quarantined
+
+    curated = pd.read_parquet(settings.data_directory / "curated" / "news_items.parquet")
+    assert len(curated) == 1
+    row = curated.iloc[0]
+    assert row["title"] == "Debt talks resume"  # derived from the URL slug
+    assert row["outlet"] == "www.dawn.com"
+    assert row["tone"] == -3.2
+    assert list(row["country_iso3"]) == ["PAK"]
+    assert row["summary_own"] is None or pd.isna(row["summary_own"])
+
+
 def test_gdelt_backoff_survives_transient_429s(monkeypatch: pytest.MonkeyPatch) -> None:
     # Shared CI runner IPs make a 429 on the first request routine; the fetch
     # helper must back off and succeed once the window clears.

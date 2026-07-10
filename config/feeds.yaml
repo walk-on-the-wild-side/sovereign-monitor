@@ -21,9 +21,16 @@ igo_press_rss:
   - outlet: Asian Development Bank
     url: https://feeds.feedburner.com/adb_news
 
-# GDELT DOC API query plan: one focused query per scored country, spaced >5s
-# apart (GDELT rate limit). Query terms target sovereign-stress coverage.
+# GDELT ingestion plan. mode "bulk" reads the raw 15-minute event export files
+# (plain downloads, no rate limit); mode "doc" runs the per-country DOC API
+# queries below. The DOC API has 429'd every request from every IP we tested
+# (2026-07-09/10), so bulk is the working transport; the query plan stays for
+# the day the API recovers.
 gdelt:
+  mode: bulk
+  bulk:
+    base_url: http://data.gdeltproject.org/gdeltv2
+    files_per_run: 96  # 15-minute export files; 96 covers the last 24 hours
   timespan: 3d
   max_records: 75
   queries:

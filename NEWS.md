@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- GDELT ingestion switched to the raw 15-minute bulk export files (no rate limit,
+  carries tone) because the DOC API currently 429s every request from every IP
+  tested; the DOC query plan remains configured for whenever the API recovers.
 - B1 ingestion layer: eleven new adapters (OCCRP, central-bank and IGO press feeds,
   GDELT, Frankfurter FX, Yahoo Finance, World Bank WDI + IDS China-creditor series,
   IMF SDMX reserves, ND-GAIN, AidData GCDF); volume guardrails via a batch log;

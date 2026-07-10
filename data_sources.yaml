@@ -53,9 +53,13 @@ sources:
     redistribution: open          # GDELT data tables are open; underlying article text is NOT
     theme_tags: [empire, war, culture, sovereign, fx]
     notes: >
-      Monitoring backbone — sidesteps single-publisher RSS limits. Query by country,
-      theme, tone. Raw bulk files also downloadable. Store GDELT-derived fields freely;
-      do not re-host the source articles' text.
+      Monitoring backbone — sidesteps single-publisher RSS limits. Store
+      GDELT-derived fields freely; do not re-host the source articles' text.
+      TRANSPORT 2026-07-10: the DOC API 429s every request from every IP/user-agent
+      we tested (local + CI runners, exponential backoff exhausted), so ingestion
+      runs on the raw 15-minute bulk export files (data.gdeltproject.org — plain
+      downloads, no rate limit, includes tone). The DOC API query plan is kept in
+      config/feeds.yaml (mode: doc) for whenever it recovers.
 
   - id: bloomberg_rss
     name: Bloomberg public RSS (Markets, Businessweek)
