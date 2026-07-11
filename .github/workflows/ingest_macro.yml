@@ -25,33 +25,47 @@ jobs:
           enable-cache: true
       - run: uv python install
       - run: uv sync --locked
-      - name: Seed store from committed public data
-        run: uv run python -m sovereign_monitor seed-public
-      # Same failure isolation as the daily workflow: healthy sources always land
-      # and get committed; any failure still turns the run red at the end.
-      - name: Ingest macro sources
+      # Same retry-on-push-rejection shape as ingest-market-news.yml — see that
+      # file's comment for why. worldbank_wdi in particular disconnects mid-request
+      # often enough that it's the expected occasional failure here (also mitigated
+      # by get_with_retry in the adapter itself); one flaky source must not discard
+      # the others.
+      - name: Ingest, validate, export, and commit
         id: ingest
-        run: |
-          failed=""
-          for source in worldbank_wdi worldbank_ids imf; do
-            echo "::group::ingest $source"
-            uv run python -m sovereign_monitor ingest --source "$source" || failed="$failed $source"
-            echo "::endgroup::"
-          done
-          echo "failed=$failed" >> "$GITHUB_OUTPUT"
-      - name: Validate store and warn about staleness
-        run: uv run python -m sovereign_monitor validate
-      - name: Export re-publishable subset
-        run: uv run python -m sovereign_monitor export-public
-      - name: Commit refreshed public data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public_data
-          git diff --staged --quiet || {
+
+          for attempt in 1 2; do
+            rm -rf data
+            uv run python -m sovereign_monitor seed-public
+
+            failed=""
+            for source in worldbank_wdi worldbank_ids imf; do
+              echo "::group::ingest $source (attempt $attempt)"
+              uv run python -m sovereign_monitor ingest --source "$source" || failed="$failed $source"
+              echo "::endgroup::"
+            done
+            echo "failed=$failed" >> "$GITHUB_OUTPUT"
+
+            uv run python -m sovereign_monitor validate
+            uv run python -m sovereign_monitor export-public
+
+            git add public_data
+            if git diff --staged --quiet; then
+              exit 0
+            fi
             git commit -m "Data: weekly macro ingest $(date -u +%F)"
-            git push
-          }
+            if git push; then
+              exit 0
+            fi
+
+            echo "::warning::push rejected on attempt $attempt; resetting to latest main and retrying"
+            git fetch origin main
+            git reset --hard origin/main
+          done
+          echo "sovereign-monitor: push still rejected after retries" >&2
+          exit 1
       - name: Fail the run if any source failed
         if: steps.ingest.outputs.failed != ''
         env:

@@ -14,6 +14,7 @@ import pandas as pd
 import yaml
 
 from sovereign_monitor.ingestion.base import IngestionRuntimeError, SourceAdapter
+from sovereign_monitor.ingestion.http_retry import get_with_retry
 from sovereign_monitor.schemas import OBSERVATION_COLUMNS
 
 
@@ -60,22 +61,24 @@ class WorldBankWdiAdapter(SourceAdapter):
         countries = ";".join(_scored_countries(self.settings.countries_path))
         current_year = datetime.now(tz=UTC).year
         envelope: dict[str, Any] = {}
-        # The WDI API intermittently stalls for tens of seconds; be patient rather
-        # than flaky — a scheduled run that times out fails the whole workflow.
+        # The WDI API intermittently stalls or drops the connection outright
+        # ("Server disconnected without sending a response"); get_with_retry
+        # absorbs that instead of failing the whole scheduled run.
         with httpx.Client(
             timeout=max(self.settings.http_timeout_seconds, 300.0),
             headers={"User-Agent": self.settings.http_user_agent},
         ) as client:
             for code in self._indicator_codes():
-                response = client.get(
+                response = get_with_retry(
+                    client,
                     f"{self.source.endpoint}/country/{countries}/indicator/{code}",
-                    params={
+                    {
                         "format": "json",
                         "per_page": 20000,
                         "date": f"2000:{current_year}",
                     },
+                    self.log,
                 )
-                response.raise_for_status()
                 envelope[code] = response.json()
         return json.dumps(envelope).encode("utf-8")
 
@@ -132,10 +135,9 @@ class WorldBankIdsAdapter(SourceAdapter):
                 records: list[Any] = []
                 page, pages = 1, 1
                 while page <= pages:
-                    response = client.get(
-                        url, params={"format": "json", "per_page": 5000, "page": page}
+                    response = get_with_retry(
+                        client, url, {"format": "json", "per_page": 5000, "page": page}, self.log
                     )
-                    response.raise_for_status()
                     body = response.json()
                     pages = int(body.get("pages", 1))
                     records.extend(body.get("source", {}).get("data", []))
