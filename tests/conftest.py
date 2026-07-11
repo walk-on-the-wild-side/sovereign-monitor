@@ -28,6 +28,7 @@ def settings(tmp_path: Path) -> Settings:
         fred_api_key=None,
         data_directory=tmp_path / "data",
         public_data_directory=tmp_path / "public_data",
+        dashboard_export_directory=tmp_path / "dashboard_export",
         registry_path=PROJECT_ROOT / "data_sources.yaml",
         countries_path=PROJECT_ROOT / "config" / "countries.yaml",
         feeds_path=PROJECT_ROOT / "config" / "feeds.yaml",

@@ -56,16 +56,23 @@ class NdGainAdapter(SourceAdapter):
 
     def parse(self, payload: bytes, batch_id: str, ingested_at: pd.Timestamp) -> pd.DataFrame:
         archive = zipfile.ZipFile(io.BytesIO(payload))
-        # Component subdirectories repeat these file names; the headline files sit
-        # closest to the archive root, so the shortest path wins per basename.
+        # The archive repeats these basenames elsewhere — trends/ holds slope
+        # tables with the SAME names but no year columns, and __MACOSX/ holds
+        # resource-fork junk — so a headline file only counts when its parent
+        # directory is named after its component (gain/gain.csv, ...).
         selected: dict[str, str] = {}
         for name in archive.namelist():
-            base = PurePosixPath(name).name
-            if base in ND_GAIN_FILES and (base not in selected or len(name) < len(selected[base])):
+            if name.startswith("__MACOSX/"):
+                continue
+            path = PurePosixPath(name)
+            base = path.name
+            if base in ND_GAIN_FILES and path.parent.name == base.removesuffix(".csv"):
                 selected[base] = name
-        if "gain.csv" not in selected:
+        missing = set(ND_GAIN_FILES) - set(selected)
+        if missing:
             raise IngestionRuntimeError(
-                f"nd-gain archive has no gain.csv; entries: {archive.namelist()[:10]}"
+                f"nd-gain archive is missing component files {sorted(missing)}; "
+                f"entries: {archive.namelist()[:10]}"
             )
 
         rows: list[dict[str, Any]] = []

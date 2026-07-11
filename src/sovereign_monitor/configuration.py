@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # sources only) — the durable state scheduled runs build on. See export-public.
     public_data_directory: Path = Path("public_data")
 
+    # Committed derived outputs (index scores, charts) that feed the dashboard
+    # and the weekly issue. Derived values only — always re-publishable.
+    dashboard_export_directory: Path = Path("dashboard_export")
+
     http_timeout_seconds: float = 30.0
     http_user_agent: str = (
         "sovereign-monitor/0.1.0 "

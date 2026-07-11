@@ -21,7 +21,7 @@ def test_help_flag(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_deferred_commands_refuse_to_run(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["build-index"]) == 2
+    assert main(["signals"]) == 2
     error_output = capsys.readouterr().err
     assert error_output.startswith("sovereign-monitor:")
     assert "not implemented" in error_output

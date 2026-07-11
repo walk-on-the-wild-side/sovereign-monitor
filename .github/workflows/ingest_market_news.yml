@@ -23,6 +23,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
+          # Pinned: the unpinned action falls back to whatever uv is newest,
+          # which makes scheduled runs non-reproducible.
+          version: "0.11.28"
           enable-cache: true
       - run: uv python install
       - run: uv sync --locked
@@ -61,8 +64,9 @@ jobs:
 
             uv run python -m sovereign_monitor validate
             uv run python -m sovereign_monitor export-public
+            uv run python -m sovereign_monitor build-index
 
-            git add public_data
+            git add public_data dashboard_export
             if git diff --staged --quiet; then
               exit 0
             fi

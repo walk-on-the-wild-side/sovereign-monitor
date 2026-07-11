@@ -4,23 +4,33 @@ import io
 import zipfile
 
 import pandas as pd
+import pytest
 
 from sovereign_monitor.configuration import Settings
-from sovereign_monitor.ingestion import AidDataAdapter, NdGainAdapter
+from sovereign_monitor.ingestion import AidDataAdapter, IngestionRuntimeError, NdGainAdapter
 from sovereign_monitor.registry import Registry
 
 
 def _nd_gain_archive() -> bytes:
-    """A minimal ND-GAIN zip: headline CSVs at the root, a decoy in a subdirectory."""
+    """A synthetic ND-GAIN zip modeling the traps in the real 2026 release.
+
+    The real archive repeats every headline basename under trends/ (slope tables
+    with no year columns, on SHORTER paths) and ships __MACOSX resource-fork
+    junk — both must be ignored in favor of the component directories.
+    """
     wide_csv = "ISO3,Name,2022,2023\nPAK,Pakistan,38.1,38.4\nIND,India,45.2,45.6\n"
+    trend_csv = "ISO3,Name,slope\nPAK,Pakistan,99.9\n"
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
-        archive.writestr("resources/gain/gain.csv", wide_csv)
-        archive.writestr("resources/vulnerability/vulnerability.csv", wide_csv)
-        archive.writestr("resources/readiness/readiness.csv", wide_csv)
-        # Sector file with the same basename, deeper path: must NOT be selected.
+        archive.writestr("release/gain/gain.csv", wide_csv)
+        archive.writestr("release/vulnerability/vulnerability.csv", wide_csv)
+        archive.writestr("release/readiness/readiness.csv", wide_csv)
+        # The traps: same basenames, shorter paths, wrong content.
+        archive.writestr("release/trends/vulnerability.csv", trend_csv)
+        archive.writestr("release/trends/readiness.csv", trend_csv)
+        archive.writestr("__MACOSX/release/gain/._gain.csv", "junk")
         archive.writestr(
-            "resources/vulnerability/sectors/water/vulnerability.csv",
+            "release/vulnerability/sectors/water/vulnerability.csv",
             "ISO3,Name,2023\nPAK,Pakistan,99.9\n",
         )
     return buffer.getvalue()
@@ -57,9 +67,20 @@ def test_nd_gain_melts_headline_files_only(registry: Registry, settings: Setting
         "ND_GAIN.vulnerability",
         "ND_GAIN.readiness",
     }
-    # 2 countries x 2 years x 3 files; the deeper sector decoy contributes nothing.
+    # 2 countries x 2 years x 3 files; every trap contributes nothing.
     assert len(curated) == 12
     assert not (curated["value"] == 99.9).any()
+
+
+def test_nd_gain_missing_component_fails_loudly(registry: Registry, settings: Settings) -> None:
+    # A layout change that hides any headline file must be an error, never a
+    # silently thinner index (this is how the climate pillar went missing once).
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("release/gain/gain.csv", "ISO3,Name,2023\nPAK,Pakistan,38.4\n")
+    adapter = NdGainAdapter(registry.sources["nd_gain"], settings)
+    with pytest.raises(IngestionRuntimeError, match="missing component files"):
+        adapter.run(payload=buffer.getvalue())
 
 
 def test_aiddata_aggregates_recommended_commitments(registry: Registry, settings: Settings) -> None:

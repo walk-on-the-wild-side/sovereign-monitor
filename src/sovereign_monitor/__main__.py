@@ -13,6 +13,7 @@ import pandera.errors
 
 from sovereign_monitor import __version__
 from sovereign_monitor.configuration import Settings
+from sovereign_monitor.index import build_index_exports
 from sovereign_monitor.ingestion import (
     ADAPTERS,
     IngestionConfigurationError,
@@ -27,7 +28,6 @@ PROGRAM = "sovereign-monitor"
 
 # Commands whose implementation arrives with a later lifecycle stage (SPEC.md).
 DEFERRED_COMMANDS = {
-    "build-index": "B2",
     "signals": "B3",
     "surveil": "B4",
     "export": "B5",
@@ -47,6 +47,11 @@ CADENCE_MAX_AGE_DAYS = {
     "quarterly": 800,
     "annual": 800,
 }
+
+# Per-source overrides where the data's own frequency differs from the registry's
+# cadence field (which is the *pull* cadence): WDI is pulled monthly but its
+# indicators publish annually, so the monthly threshold would warn forever.
+FRESHNESS_MAX_AGE_OVERRIDES = {"worldbank_wdi": 800}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -70,6 +75,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "seed-public",
         help="seed an empty curated store from committed public_data/ (CI startup)",
+    )
+    subparsers.add_parser(
+        "build-index",
+        help="compute the composite index and write dashboard_export/",
     )
 
     for name, stage in DEFERRED_COMMANDS.items():
@@ -145,7 +154,9 @@ def warn_about_stale_sources(settings: Settings) -> int:
         source = registry.sources.get(source_id)
         if source is None:
             continue
-        threshold = CADENCE_MAX_AGE_DAYS.get(source.cadence)
+        threshold = FRESHNESS_MAX_AGE_OVERRIDES.get(
+            source_id, CADENCE_MAX_AGE_DAYS.get(source.cadence)
+        )
         if threshold is None or pd.isna(newest_date):
             continue
         age_days = (today - newest_date.normalize()).days
@@ -176,6 +187,14 @@ def main(argv: list[str] | None = None) -> int:
         seeded = seed_curated_from_public(settings)
         for table_name, row_count in seeded.items():
             print(f"seeded {table_name}: {row_count} rows")
+        return 0
+    if arguments.command == "build-index":
+        observations_path = settings.data_directory / "curated" / "observations.parquet"
+        if not observations_path.exists():
+            return _fail("no curated observations to index; run ingest (or seed-public) first")
+        built = build_index_exports(settings)
+        for export_name, row_count in built.items():
+            print(f"built {export_name}: {row_count} rows")
         return 0
     stage = DEFERRED_COMMANDS[arguments.command]
     print(

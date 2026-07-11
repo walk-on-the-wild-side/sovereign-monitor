@@ -18,6 +18,7 @@ dependencies = [
     "yfinance>=0.2.40",
     "sdmx1>=2.20",
     "openpyxl>=3.1",
+    "matplotlib>=3.9",
 ]
 
 [project.scripts]

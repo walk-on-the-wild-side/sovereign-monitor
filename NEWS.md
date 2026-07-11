@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- B2 composite sovereign-stress index: twelve indicators in four equal-weighted
+  pillars (market, external debt, macro, climate), scored 0-100 with pooled
+  winsorized min-max scaling; monthly index plus a daily market overlay, exported
+  to committed `dashboard_export/` (CSV + heatmap) by `build-index` and refreshed
+  by the scheduled workflows. Methodology published at `docs/methodology.md`
+  (hand-recomputable; held to the code by a unit test). Point-in-time features
+  layer with the leakage mutation test now in CI (v1 DoD item).
+
 - GDELT ingestion switched to the raw 15-minute bulk export files (no rate limit,
   carries tone) because the DOC API currently 429s every request from every IP
   tested; the DOC query plan remains configured for whenever the API recovers.

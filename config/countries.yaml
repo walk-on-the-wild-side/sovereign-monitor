@@ -67,6 +67,7 @@ series:
       - {code: FP.CPI.TOTL.ZG, description: CPI inflation, percent}
       - {code: BN.CAB.XOKA.GD.ZS, description: current account, percent of GDP}
       - {code: DT.DOD.DECT.CD, description: external debt stock, USD}
+      - {code: DT.DOD.DECT.GN.ZS, description: external debt stock, percent of GNI}
       - {code: DT.TDS.DPPG.XP.ZS, description: PPG debt service, percent of exports}
 
   # World Bank IDS (CC BY-4.0): creditor-dimension series via the sources/6 API.
