@@ -13,6 +13,7 @@ import pandas as pd
 import yaml
 
 from sovereign_monitor.ingestion.base import IngestionConfigurationError, SourceAdapter
+from sovereign_monitor.ingestion.http_retry import get_with_retry
 
 
 class FredAdapter(SourceAdapter):
@@ -40,16 +41,19 @@ class FredAdapter(SourceAdapter):
             headers={"User-Agent": self.settings.http_user_agent},
         ) as client:
             for item in plan:
-                response = client.get(
+                # FRED intermittently 502s (seen reddening scheduled runs); retry
+                # transient upstream errors rather than fail the whole batch.
+                response = get_with_retry(
+                    client,
                     f"{self.source.endpoint}/series/observations",
-                    params={
+                    {
                         "series_id": item["series_id"],
                         "api_key": self.settings.fred_api_key,
                         "file_type": "json",
                         "observation_start": observation_start,
                     },
+                    self.log,
                 )
-                response.raise_for_status()
                 payloads[item["series_id"]] = response.json()
         return json.dumps(payloads).encode("utf-8")
 
