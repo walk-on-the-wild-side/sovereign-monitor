@@ -178,6 +178,15 @@ class MultiFeedRssAdapter(SourceAdapter):
         return finalize_news_frame(rows)
 
 
+class MarketsNewsAdapter(MultiFeedRssAdapter):
+    """Markets & economy news feeds (CNBC; verified list in config/feeds.yaml).
+
+    Replaces the dead Bloomberg public RSS as the markets-news source.
+    """
+
+    source_id: ClassVar[str] = "markets_news_rss"
+
+
 class OccrpAdapter(MultiFeedRssAdapter):
     """OCCRP investigations feed."""
 

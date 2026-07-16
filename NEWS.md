@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- B3 regime/anomaly signals: trailing z-score anomaly flags (2.5 sigma sustained
+  three observations) and PELT change-point regime flags on the OAS proxy, each
+  country's FX, and the composite index; `signals.csv` joins the daily exports.
+  Backtested against a hand-curated stress-event list (`docs/stress_events.yaml`)
+  with detection precision/recall at 30/90-day tolerances and a naive-forecast
+  comparison, tracked in local MLflow (SQLite); honest results in
+  `docs/model_card.md` (recall ~0.4, no point forecast beats naive).
+- News: Bloomberg public RSS retired (all feed paths 404 as of 2026-07-16);
+  `markets_news_rss` (CNBC markets + economy) replaces it in the daily workflow.
+
 - B2 composite sovereign-stress index: twelve indicators in four equal-weighted
   pillars (market, external debt, macro, climate), scored 0-100 with pooled
   winsorized min-max scaling; monthly index plus a daily market overlay, exported

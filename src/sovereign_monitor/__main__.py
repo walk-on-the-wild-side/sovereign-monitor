@@ -6,6 +6,7 @@ later-phase commands exist but refuse to run until their lifecycle stage lands.
 
 import argparse
 import sys
+from pathlib import Path
 
 import httpx
 import pandas as pd
@@ -22,13 +23,13 @@ from sovereign_monitor.ingestion import (
 from sovereign_monitor.logging_setup import configure_logging
 from sovereign_monitor.registry import load_registry
 from sovereign_monitor.schemas import TABLES
+from sovereign_monitor.signals import build_signal_exports, evaluate_signals
 from sovereign_monitor.storage import export_public_subset, seed_curated_from_public
 
 PROGRAM = "sovereign-monitor"
 
 # Commands whose implementation arrives with a later lifecycle stage (SPEC.md).
 DEFERRED_COMMANDS = {
-    "signals": "B3",
     "surveil": "B4",
     "export": "B5",
 }
@@ -75,6 +76,12 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "seed-public",
         help="seed an empty curated store from committed public_data/ (CI startup)",
+    )
+    subparsers.add_parser(
+        "signals", help="compute anomaly/regime flags into dashboard_export/signals.csv"
+    )
+    subparsers.add_parser(
+        "backtest", help="evaluate signals against docs/stress_events.yaml (local MLflow)"
     )
     subparsers.add_parser(
         "build-index",
@@ -187,6 +194,15 @@ def main(argv: list[str] | None = None) -> int:
         seeded = seed_curated_from_public(settings)
         for table_name, row_count in seeded.items():
             print(f"seeded {table_name}: {row_count} rows")
+        return 0
+    if arguments.command == "signals":
+        for name, count in build_signal_exports(settings).items():
+            print(f"built {name}: {count} rows")
+        return 0
+    if arguments.command == "backtest":
+        result = evaluate_signals(settings, Path("docs/stress_events.yaml"))
+        for key, value in result["metrics"].items():
+            print(f"{key}: {value}")
         return 0
     if arguments.command == "build-index":
         observations_path = settings.data_directory / "curated" / "observations.parquet"

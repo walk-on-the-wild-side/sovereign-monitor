@@ -54,7 +54,7 @@ jobs:
             uv run python -m sovereign_monitor seed-public
 
             failed=""
-            for source in bloomberg_rss occrp central_banks_rss igo_press_rss gdelt \
+            for source in markets_news_rss occrp central_banks_rss igo_press_rss gdelt \
                           fred frankfurter yfinance; do
               echo "::group::ingest $source (attempt $attempt)"
               uv run python -m sovereign_monitor ingest --source "$source" || failed="$failed $source"
@@ -65,6 +65,7 @@ jobs:
             uv run python -m sovereign_monitor validate
             uv run python -m sovereign_monitor export-public
             uv run python -m sovereign_monitor build-index
+            uv run python -m sovereign_monitor signals
 
             git add public_data dashboard_export
             if git diff --staged --quiet; then

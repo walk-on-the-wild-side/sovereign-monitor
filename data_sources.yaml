@@ -72,7 +72,27 @@ sources:
     cadence: hourly
     redistribution: link_only
     theme_tags: [bonds, fx, commodities]
-    notes: "Also /businessweek/news.rss. Verified live 2026. Headlines/links only — paid Data License is a separate product you do NOT need."
+    notes: >
+      BROKEN, verified 2026-07-16: all public feed paths (markets, businessweek,
+      technology) now return 404 — Bloomberg retired its public RSS. Removed from
+      the scheduled workflow; markets_news_rss (CNBC) replaces it. The adapter and
+      recorded fixture are kept as a valid RSS-parse test.
+
+  - id: markets_news_rss
+    name: Markets & economy news feeds (CNBC)
+    layer: news
+    category: markets_news
+    provides: Headlines + links for markets and the economy
+    access: rss
+    endpoint: https://www.cnbc.com/id/10000664/device/rss/rss.html
+    auth: none
+    cadence: hourly
+    redistribution: link_only
+    theme_tags: [bonds, fx, commodities]
+    notes: >
+      Feed list in config/feeds.yaml. Verified live 2026-07-16 (CNBC markets +
+      economy, 30 items each). Replaces the dead Bloomberg feed. Headlines + links
+      only. Swap in additional outlets by adding to the feeds.yaml list.
 
   - id: reuters_via_gnews
     name: Reuters (via Google News RSS query)

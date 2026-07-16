@@ -14,6 +14,7 @@ from sovereign_monitor.ingestion import (
     GdeltAdapter,
     IgoPressAdapter,
     IngestionRuntimeError,
+    MarketsNewsAdapter,
     OccrpAdapter,
     SourceAdapter,
 )
@@ -30,6 +31,7 @@ def _envelope(outlet: str, fixture_name: str) -> bytes:
 
 
 MULTI_FEED_CASES = [
+    (MarketsNewsAdapter, "CNBC Markets", "cnbc_markets.xml"),
     (OccrpAdapter, "OCCRP", "occrp_feed.xml"),
     (CentralBankPressAdapter, "Reserve Bank of India", "rbi_press.xml"),
     (IgoPressAdapter, "Asian Development Bank", "adb_news.xml"),

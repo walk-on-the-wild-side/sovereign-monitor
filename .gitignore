@@ -16,3 +16,6 @@ dist/
 CLAUDE.md
 CLAUDE.local.md
 .claude/
+
+# Local MLflow tracking backend (experiment history; not committed).
+mlflow.db

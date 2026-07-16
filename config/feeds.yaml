@@ -3,6 +3,14 @@
 # data_sources.yaml. Licensing for all of these is link_only: headlines + links
 # + our own summary, never article bodies.
 
+markets_news_rss:
+  # CNBC markets + economy, verified live 2026-07-16 (30 items each). Replaces the
+  # dead Bloomberg public RSS. Headlines + links only (link_only licensing).
+  - outlet: CNBC Markets
+    url: https://www.cnbc.com/id/10000664/device/rss/rss.html
+  - outlet: CNBC Economy
+    url: https://www.cnbc.com/id/20910258/device/rss/rss.html
+
 occrp:
   - outlet: OCCRP
     url: https://www.occrp.org/en/feed

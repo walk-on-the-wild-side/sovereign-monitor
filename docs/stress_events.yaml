@@ -1,0 +1,146 @@
+# stress_events.yaml — hand-curated reference list of sovereign-stress events for
+# the twelve scored countries, 2000-present (SPEC stage B3). This is the ground
+# truth the signal backtest is evaluated against; it is a judgment call by the
+# editor, not a machine output, and it errs toward well-documented events.
+#
+# Schema per event:
+#   country_iso3 : scored-country code
+#   date         : event date (day precision where documented; precision: month
+#                  means the day is a placement within a documented month, which
+#                  the backtest's 30/90-day tolerance windows absorb)
+#   type         : default | imf_program | currency_crisis | reserve_stress | banking_crisis
+#   description  : one line, our own words
+#   citation     : institution/outlet + what to search; stable landing page where useful
+#
+# Editorial rule: every event must be independently verifiable from public
+# reporting; nothing here is derived from the monitor's own data.
+
+events:
+  # ---- Pakistan -------------------------------------------------------------
+  - {country_iso3: PAK, date: 2008-11-24, precision: day, type: imf_program,
+     description: IMF Stand-By Arrangement approved amid balance-of-payments crisis,
+     citation: "IMF press release, Nov 2008 (imf.org/en/Countries/PAK)"}
+  - {country_iso3: PAK, date: 2013-09-04, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved,
+     citation: "IMF press release, Sep 2013 (imf.org/en/Countries/PAK)"}
+  - {country_iso3: PAK, date: 2019-05-16, precision: month, type: currency_crisis,
+     description: Rupee sharp devaluation on move toward market-determined rate,
+     citation: "Reuters/Dawn coverage, May 2019"}
+  - {country_iso3: PAK, date: 2019-07-03, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved,
+     citation: "IMF press release, Jul 2019 (imf.org/en/Countries/PAK)"}
+  - {country_iso3: PAK, date: 2022-07-13, precision: day, type: imf_program,
+     description: Staff-level agreement reviving stalled EFF amid near-default stress,
+     citation: "IMF statement, Jul 2022; Reuters coverage"}
+  - {country_iso3: PAK, date: 2023-01-26, precision: day, type: currency_crisis,
+     description: Rupee record single-day fall after exchange-rate cap removed,
+     citation: "Reuters/Bloomberg coverage, 26 Jan 2023"}
+  - {country_iso3: PAK, date: 2023-07-12, precision: day, type: imf_program,
+     description: IMF Stand-By Arrangement approved averting default,
+     citation: "IMF press release, Jul 2023 (imf.org/en/Countries/PAK)"}
+  - {country_iso3: PAK, date: 2024-09-25, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved,
+     citation: "IMF press release, Sep 2024 (imf.org/en/Countries/PAK)"}
+
+  # ---- Sri Lanka ------------------------------------------------------------
+  - {country_iso3: LKA, date: 2009-07-24, precision: day, type: imf_program,
+     description: IMF Stand-By Arrangement approved after reserves crisis,
+     citation: "IMF press release, Jul 2009 (imf.org/en/Countries/LKA)"}
+  - {country_iso3: LKA, date: 2016-06-03, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved,
+     citation: "IMF press release, Jun 2016 (imf.org/en/Countries/LKA)"}
+  - {country_iso3: LKA, date: 2022-03-07, precision: day, type: currency_crisis,
+     description: Rupee floated and crashed ~30 percent within weeks,
+     citation: "CBSL announcement; Reuters coverage, Mar 2022"}
+  - {country_iso3: LKA, date: 2022-04-12, precision: day, type: default,
+     description: Pre-emptive suspension of external debt service announced,
+     citation: "Ministry of Finance statement; global coverage, 12 Apr 2022"}
+  - {country_iso3: LKA, date: 2023-03-20, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved post-default,
+     citation: "IMF press release, Mar 2023 (imf.org/en/Countries/LKA)"}
+
+  # ---- Bangladesh -----------------------------------------------------------
+  - {country_iso3: BGD, date: 2012-04-11, precision: day, type: imf_program,
+     description: IMF Extended Credit Facility approved,
+     citation: "IMF press release, Apr 2012 (imf.org/en/Countries/BGD)"}
+  - {country_iso3: BGD, date: 2023-01-30, precision: day, type: imf_program,
+     description: IMF ECF/EFF/RSF package approved amid reserve drawdown,
+     citation: "IMF press release, Jan 2023 (imf.org/en/Countries/BGD)"}
+  - {country_iso3: BGD, date: 2024-05-08, precision: day, type: currency_crisis,
+     description: Taka devalued with move to crawling peg,
+     citation: "Bangladesh Bank announcement; Reuters, May 2024"}
+
+  # ---- Nepal ----------------------------------------------------------------
+  - {country_iso3: NPL, date: 2022-01-12, precision: day, type: imf_program,
+     description: IMF Extended Credit Facility approved,
+     citation: "IMF press release, Jan 2022 (imf.org/en/Countries/NPL)"}
+  - {country_iso3: NPL, date: 2022-04-08, precision: month, type: reserve_stress,
+     description: Import restrictions and central-bank governor suspension amid falling reserves,
+     citation: "Kathmandu Post / Reuters coverage, Apr 2022"}
+
+  # ---- Maldives -------------------------------------------------------------
+  - {country_iso3: MDV, date: 2020-04-22, precision: day, type: imf_program,
+     description: IMF Rapid Credit Facility approved as tourism receipts collapsed,
+     citation: "IMF press release, Apr 2020 (imf.org/en/Countries/MDV)"}
+  - {country_iso3: MDV, date: 2024-09-11, precision: month, type: reserve_stress,
+     description: Sukuk-default fears with usable reserves near depletion; ratings downgrades,
+     citation: "Moody's/Fitch actions; Bloomberg coverage, Aug-Sep 2024"}
+
+  # ---- India (large-economy stress episodes, not programs) --------------------
+  - {country_iso3: IND, date: 2008-10-24, precision: month, type: currency_crisis,
+     description: Rupee GFC slide to then-record lows amid capital flight,
+     citation: "RBI bulletins; contemporaneous coverage, Oct 2008"}
+  - {country_iso3: IND, date: 2013-08-28, precision: day, type: currency_crisis,
+     description: Taper-tantrum rupee record low,
+     citation: "RBI actions; Reuters coverage, 28 Aug 2013"}
+
+  # ---- Kazakhstan -----------------------------------------------------------
+  - {country_iso3: KAZ, date: 2009-02-04, precision: day, type: currency_crisis,
+     description: Tenge devalued ~18 percent,
+     citation: "National Bank of Kazakhstan; Reuters, Feb 2009"}
+  - {country_iso3: KAZ, date: 2014-02-11, precision: day, type: currency_crisis,
+     description: Tenge devalued ~19 percent,
+     citation: "National Bank of Kazakhstan; Reuters, Feb 2014"}
+  - {country_iso3: KAZ, date: 2015-08-20, precision: day, type: currency_crisis,
+     description: Tenge floated and fell ~26 percent in a day,
+     citation: "National Bank of Kazakhstan; Reuters, Aug 2015"}
+  - {country_iso3: KAZ, date: 2022-03-01, precision: month, type: currency_crisis,
+     description: Tenge slide after Russia sanctions spillover,
+     citation: "Reuters coverage, late Feb-Mar 2022"}
+
+  # ---- Uzbekistan -----------------------------------------------------------
+  - {country_iso3: UZB, date: 2017-09-05, precision: day, type: currency_crisis,
+     description: Som liberalized with ~48 percent official devaluation,
+     citation: "Central Bank of Uzbekistan; Reuters, Sep 2017"}
+
+  # ---- Kyrgyz Republic ------------------------------------------------------
+  - {country_iso3: KGZ, date: 2010-04-07, precision: day, type: reserve_stress,
+     description: Revolution and bank closures with economic disruption,
+     citation: "Contemporaneous coverage, Apr 2010"}
+  - {country_iso3: KGZ, date: 2020-03-26, precision: day, type: imf_program,
+     description: IMF Rapid Financing Instrument approved (first COVID RFI globally),
+     citation: "IMF press release, Mar 2020 (imf.org/en/Countries/KGZ)"}
+
+  # ---- Tajikistan -----------------------------------------------------------
+  - {country_iso3: TJK, date: 2016-12-20, precision: month, type: banking_crisis,
+     description: Systemic bank bailout of four banks incl. the two largest,
+     citation: "National Bank of Tajikistan; Reuters, Dec 2016"}
+  - {country_iso3: TJK, date: 2020-05-06, precision: day, type: imf_program,
+     description: IMF Rapid Credit Facility approved,
+     citation: "IMF press release, May 2020 (imf.org/en/Countries/TJK)"}
+
+  # ---- Mongolia ---------------------------------------------------------------
+  - {country_iso3: MNG, date: 2009-04-01, precision: day, type: imf_program,
+     description: IMF Stand-By Arrangement approved after commodity collapse,
+     citation: "IMF press release, Apr 2009 (imf.org/en/Countries/MNG)"}
+  - {country_iso3: MNG, date: 2016-08-18, precision: month, type: currency_crisis,
+     description: Tugrik record slide amid fiscal crisis disclosure,
+     citation: "Bank of Mongolia; Bloomberg coverage, Aug 2016"}
+  - {country_iso3: MNG, date: 2017-05-24, precision: day, type: imf_program,
+     description: IMF Extended Fund Facility approved,
+     citation: "IMF press release, May 2017 (imf.org/en/Countries/MNG)"}
+
+  # ---- Laos -------------------------------------------------------------------
+  - {country_iso3: LAO, date: 2022-06-14, precision: month, type: currency_crisis,
+     description: Kip collapse with fuel shortages and near-default warnings,
+     citation: "Reuters/Nikkei coverage, May-Jun 2022"}

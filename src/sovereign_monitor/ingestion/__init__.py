@@ -15,6 +15,7 @@ from sovereign_monitor.ingestion.rss_feeds import (
     BloombergRssAdapter,
     CentralBankPressAdapter,
     IgoPressAdapter,
+    MarketsNewsAdapter,
     OccrpAdapter,
 )
 from sovereign_monitor.ingestion.worldbank import WorldBankIdsAdapter, WorldBankWdiAdapter
@@ -23,8 +24,11 @@ from sovereign_monitor.ingestion.yfinance_prices import YfinancePricesAdapter
 # Wired adapters, keyed by registry source id. The CLI and tests index this map;
 # every key must exist in data_sources.yaml (enforced by tests/test_registry.py).
 # reuters_via_gnews is deliberately absent: its workaround broke (see registry).
+# bloomberg_rss stays registered (valid RSS-parse test) but its live feed is dead
+# (404 as of 2026-07-16); markets_news_rss (CNBC) is the scheduled markets source.
 ADAPTERS: dict[str, type[SourceAdapter]] = {
     BloombergRssAdapter.source_id: BloombergRssAdapter,
+    MarketsNewsAdapter.source_id: MarketsNewsAdapter,
     OccrpAdapter.source_id: OccrpAdapter,
     CentralBankPressAdapter.source_id: CentralBankPressAdapter,
     IgoPressAdapter.source_id: IgoPressAdapter,
@@ -52,6 +56,7 @@ __all__ = [
     "IngestionConfigurationError",
     "IngestionResult",
     "IngestionRuntimeError",
+    "MarketsNewsAdapter",
     "NdGainAdapter",
     "OccrpAdapter",
     "SourceAdapter",

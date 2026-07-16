@@ -15,6 +15,7 @@ dependencies = [
     "pydantic-settings>=2.4",
     "structlog>=24.1",
     "pyyaml>=6.0",
+    "ruptures>=1.1",
     "yfinance>=0.2.40",
     "sdmx1>=2.20",
     "openpyxl>=3.1",
@@ -32,6 +33,9 @@ dev = [
     "pre-commit>=4.0",
     "pandas-stubs>=2.2",
     "types-pyyaml>=6.0",
+    # Experiment tracking is local-only (SPEC: MLflow, never a hosted service);
+    # scheduled workflows never import it.
+    "mlflow>=2.14",
 ]
 # Track A only: manual issue pulls run in notebooks/, never imported by the package.
 notebooks = [
@@ -69,7 +73,7 @@ explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 # These libraries ship no type stubs; treat them as untyped rather than fail the build.
-module = ["feedparser", "yfinance", "sdmx", "sdmx.*"]
+module = ["feedparser", "yfinance", "sdmx", "sdmx.*", "ruptures", "ruptures.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
