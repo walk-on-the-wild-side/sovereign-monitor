@@ -3,9 +3,9 @@ composite_BGD,BGD,monthly,2026-06-30,-1.53,False,2022-08-31,False,2023-08-04
 fx_BGD,BGD,daily,2026-07-17,2.85,False,2024-05-15,False,2023-09-08
 em_oas,GLB,daily,2026-07-15,-1.12,False,2025-04-10,False,2025-07-04
 composite_IND,IND,monthly,2026-06-30,-1.38,False,2016-09-30,False,2016-08-05
-fx_IND,IND,daily,2026-07-17,0.54,False,2026-03-28,False,2022-01-28
+fx_IND,IND,daily,2026-07-17,0.55,False,2026-03-28,False,2022-01-28
 composite_KAZ,KAZ,monthly,2026-06-30,-1.76,False,2015-09-30,False,2015-09-04
-fx_KAZ,KAZ,daily,2026-07-17,0.31,False,2025-02-15,False,2015-08-21
+fx_KAZ,KAZ,daily,2026-07-17,0.23,False,2025-02-15,False,2015-08-21
 composite_KGZ,KGZ,monthly,2026-06-30,-1.53,False,2023-09-30,False,2023-08-04
 composite_LAO,LAO,monthly,2026-06-30,-1.69,False,2023-09-30,False,2022-05-06
 fx_LAO,LAO,daily,2026-07-17,2.19,False,2026-04-03,False,2023-11-17

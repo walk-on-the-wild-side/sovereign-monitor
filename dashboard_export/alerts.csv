@@ -1,10 +1,3 @@
 fired_at,severity,rule,scope,metric,detail
-2026-07-16,warning,input_drift,fx_IND,0.741,PSI 0.74 on fx_IND (recent vs baseline window)
-2026-07-16,warning,input_drift,fx_LKA,0.676,PSI 0.68 on fx_LKA (recent vs baseline window)
-2026-07-16,warning,staleness,bloomberg_rss,6.0,bloomberg_rss newest record is 6d old (threshold 2d)
-2026-07-16,warning,staleness,frankfurter,7.0,frankfurter newest record is 7d old (threshold 4d)
-2026-07-16,warning,staleness,fred,7.0,fred newest record is 7d old (threshold 4d)
-2026-07-16,warning,staleness,gdelt,6.0,gdelt newest record is 6d old (threshold 2d)
-2026-07-16,warning,staleness,igo_press_rss,8.0,igo_press_rss newest record is 8d old (threshold 4d)
-2026-07-16,warning,staleness,occrp,7.0,occrp newest record is 7d old (threshold 4d)
-2026-07-16,warning,staleness,yfinance,5.0,yfinance newest record is 5d old (threshold 4d)
+2026-07-16,critical,input_drift,fx_IND,1.193,PSI 1.19 on fx_IND (recent vs baseline window)
+2026-07-16,warning,input_drift,fx_LKA,0.72,PSI 0.72 on fx_LKA (recent vs baseline window)
