@@ -66,6 +66,7 @@ jobs:
             uv run python -m sovereign_monitor export-public
             uv run python -m sovereign_monitor build-index
             uv run python -m sovereign_monitor signals
+            uv run python -m sovereign_monitor surveil
 
             git add public_data dashboard_export
             if git diff --staged --quiet; then

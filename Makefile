@@ -37,8 +37,11 @@ signals:  ## compute anomaly/regime flags and write dashboard_export/signals.csv
 backtest:  ## evaluate signals against docs/stress_events.yaml (logs to local MLflow)
 	uv run python -m sovereign_monitor backtest
 
+surveil:  ## run drift/threshold/staleness checks into dashboard_export/alerts.csv
+	uv run python -m sovereign_monitor surveil
+
 # Later lifecycle stages (SPEC.md): fail loudly instead of pretending to work.
 dashboard issue-pack:  ## not implemented until their lifecycle stage
 	@echo "sovereign-monitor: $@ is not implemented until its lifecycle stage (see SPEC.md)" >&2; exit 2
 
-.PHONY: help setup lint test ingest validate export-public build-index signals backtest dashboard issue-pack
+.PHONY: help setup lint test ingest validate export-public build-index signals backtest surveil dashboard issue-pack

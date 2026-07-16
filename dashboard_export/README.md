@@ -11,6 +11,7 @@ redistribution-restricted (FRED ICE BofA, Yahoo Finance). Methodology:
 | `market_daily.csv` | business-day market-pillar score per country (the overlay) |
 | `index_heatmap.png` | trailing 24 months of the composite, countries × months |
 | `signals.csv` | latest anomaly/regime state per series (z-scores, flags, break dates) |
+| `alerts.csv` | surveillance alert log — drift (PSI), index jumps, anomalies, staleness |
 
 Refreshed by the scheduled ingest workflows via `sovereign-monitor build-index`.
 Scores are pooled-scaled over full history, so past values can shift slightly as

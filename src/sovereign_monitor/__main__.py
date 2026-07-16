@@ -25,34 +25,14 @@ from sovereign_monitor.registry import load_registry
 from sovereign_monitor.schemas import TABLES
 from sovereign_monitor.signals import build_signal_exports, evaluate_signals
 from sovereign_monitor.storage import export_public_subset, seed_curated_from_public
+from sovereign_monitor.surveillance import build_surveillance_exports, stale_sources
 
 PROGRAM = "sovereign-monitor"
 
 # Commands whose implementation arrives with a later lifecycle stage (SPEC.md).
 DEFERRED_COMMANDS = {
-    "surveil": "B4",
     "export": "B5",
 }
-
-# Freshness thresholds per registry cadence, in days (SPEC: validation rules).
-# Warnings only in B1; B4 turns staleness into dashboard alerts. Low-frequency
-# sources get slack for publication lag: annual datasets (WDI, IDS, ND-GAIN)
-# normally trail their reference year by 12-20 months, monthly reserves by 1-2
-# months. on_release and ad_hoc sources are never stale by definition.
-CADENCE_MAX_AGE_DAYS = {
-    "15min-hourly": 2,
-    "hourly": 2,
-    "daily": 4,
-    "weekly": 10,
-    "monthly": 75,
-    "quarterly": 800,
-    "annual": 800,
-}
-
-# Per-source overrides where the data's own frequency differs from the registry's
-# cadence field (which is the *pull* cadence): WDI is pulled monthly but its
-# indicators publish annually, so the monthly threshold would warn forever.
-FRESHNESS_MAX_AGE_OVERRIDES = {"worldbank_wdi": 800}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -86,6 +66,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "build-index",
         help="compute the composite index and write dashboard_export/",
+    )
+    subparsers.add_parser(
+        "surveil",
+        help="run drift/threshold/staleness checks into dashboard_export/alerts.csv",
     )
 
     for name, stage in DEFERRED_COMMANDS.items():
@@ -137,43 +121,13 @@ def run_validate(settings: Settings) -> int:
 
 def warn_about_stale_sources(settings: Settings) -> int:
     """Print a warning per source whose newest record exceeds its cadence threshold."""
-    registry = load_registry(settings.registry_path)
-    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
-    warnings = 0
-
-    newest_by_source: dict[str, pd.Timestamp] = {}
-    observations_path = settings.data_directory / "curated" / "observations.parquet"
-    if observations_path.exists():
-        observations = pd.read_parquet(observations_path)
-        newest_dates = observations.groupby("source_id")["date"].max()
-        newest_by_source.update(
-            {str(source): pd.Timestamp(when) for source, when in newest_dates.items()}
+    stale = stale_sources(settings)
+    for source in stale:
+        print(
+            f"{PROGRAM}: warning: {source.source_id} newest record is {source.age_days} days old "
+            f"(cadence {source.cadence}, threshold {source.threshold_days}d)"
         )
-    news_path = settings.data_directory / "curated" / "news_items.parquet"
-    if news_path.exists():
-        news_items = pd.read_parquet(news_path)
-        newest_news = news_items.groupby("source_id")["published_at"].max().dt.tz_localize(None)
-        newest_by_source.update(
-            {str(source): pd.Timestamp(when) for source, when in newest_news.items()}
-        )
-
-    for source_id, newest_date in sorted(newest_by_source.items()):
-        source = registry.sources.get(source_id)
-        if source is None:
-            continue
-        threshold = FRESHNESS_MAX_AGE_OVERRIDES.get(
-            source_id, CADENCE_MAX_AGE_DAYS.get(source.cadence)
-        )
-        if threshold is None or pd.isna(newest_date):
-            continue
-        age_days = (today - newest_date.normalize()).days
-        if age_days > threshold:
-            warnings += 1
-            print(
-                f"{PROGRAM}: warning: {source_id} newest record is {age_days} days old "
-                f"(cadence {source.cadence}, threshold {threshold}d)"
-            )
-    return warnings
+    return len(stale)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -211,6 +165,10 @@ def main(argv: list[str] | None = None) -> int:
         built = build_index_exports(settings)
         for export_name, row_count in built.items():
             print(f"built {export_name}: {row_count} rows")
+        return 0
+    if arguments.command == "surveil":
+        summary = build_surveillance_exports(settings)
+        print(f"alerts: {summary['alerts']} ({summary['critical']} critical)")
         return 0
     stage = DEFERRED_COMMANDS[arguments.command]
     print(

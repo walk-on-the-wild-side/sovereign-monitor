@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- B4 surveillance layer: a committed alert log (`dashboard_export/alerts.csv`) with
+  four rule families — input drift (PSI on market-return distributions), index
+  jumps (composite Δ ≥ 10 pts/month), the B3 anomaly/regime flags, and source
+  staleness. `make surveil` / the `surveil` command run it; the daily workflow
+  refreshes it. Drift honestly watches stationary returns (not trending levels)
+  with bands recalibrated above the textbook PSI thresholds for financial data —
+  rationale in `docs/surveillance.md`. A deliberately shifted input fires a drift
+  alert end to end (the B4 DoD test).
+
 - B3 regime/anomaly signals: trailing z-score anomaly flags (2.5 sigma sustained
   three observations) and PELT change-point regime flags on the OAS proxy, each
   country's FX, and the composite index; `signals.csv` joins the daily exports.

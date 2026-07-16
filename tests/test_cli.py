@@ -21,7 +21,8 @@ def test_help_flag(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_deferred_commands_refuse_to_run(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["surveil"]) == 2
+    # export (B5) is the last stage-gated command; it must refuse loudly.
+    assert main(["export"]) == 2
     error_output = capsys.readouterr().err
     assert error_output.startswith("sovereign-monitor:")
     assert "not implemented" in error_output
