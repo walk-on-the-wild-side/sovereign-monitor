@@ -1,5 +1,5 @@
 fired_at,severity,rule,scope,metric,detail
-2026-07-18,warning,input_drift,em_oas,0.578,PSI 0.58 on em_oas (recent vs baseline window)
-2026-07-18,warning,input_drift,fx_IND,0.654,PSI 0.65 on fx_IND (recent vs baseline window)
-2026-07-18,warning,input_drift,fx_LKA,0.768,PSI 0.77 on fx_LKA (recent vs baseline window)
-2026-07-18,warning,staleness,bloomberg_rss,4.0,bloomberg_rss newest record is 4d old (threshold 2d)
+2026-07-19,warning,input_drift,em_oas,0.578,PSI 0.58 on em_oas (recent vs baseline window)
+2026-07-19,warning,input_drift,fx_IND,0.654,PSI 0.65 on fx_IND (recent vs baseline window)
+2026-07-19,warning,input_drift,fx_LKA,0.768,PSI 0.77 on fx_LKA (recent vs baseline window)
+2026-07-19,warning,staleness,bloomberg_rss,5.0,bloomberg_rss newest record is 5d old (threshold 2d)
