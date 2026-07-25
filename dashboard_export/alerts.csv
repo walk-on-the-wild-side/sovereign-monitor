@@ -1,3 +1,4 @@
 fired_at,severity,rule,scope,metric,detail
-2026-07-24,critical,staleness,bloomberg_rss,10.0,bloomberg_rss newest record is 10d old (threshold 2d)
-2026-07-24,warning,input_drift,fx_LKA,0.522,PSI 0.52 on fx_LKA (recent vs baseline window)
+2026-07-25,critical,input_drift,em_oas,1.164,PSI 1.16 on em_oas (recent vs baseline window)
+2026-07-25,critical,staleness,bloomberg_rss,11.0,bloomberg_rss newest record is 11d old (threshold 2d)
+2026-07-25,warning,input_drift,fx_LKA,0.522,PSI 0.52 on fx_LKA (recent vs baseline window)
