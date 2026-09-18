@@ -1,5 +1,4 @@
 fired_at,severity,rule,scope,metric,detail
-2026-09-17,critical,anomaly,fx_BGD,5.79,fx_BGD anomaly active (z=5.79)
-2026-09-17,critical,staleness,bloomberg_rss,65.0,bloomberg_rss newest record is 65d old (threshold 2d)
-2026-09-17,warning,input_drift,em_oas,0.527,PSI 0.53 on em_oas (recent vs baseline window)
-2026-09-17,warning,input_drift,fx_KAZ,0.856,PSI 0.86 on fx_KAZ (recent vs baseline window)
+2026-09-18,critical,staleness,bloomberg_rss,66.0,bloomberg_rss newest record is 66d old (threshold 2d)
+2026-09-18,warning,input_drift,em_oas,0.546,PSI 0.55 on em_oas (recent vs baseline window)
+2026-09-18,warning,input_drift,fx_KAZ,0.809,PSI 0.81 on fx_KAZ (recent vs baseline window)
