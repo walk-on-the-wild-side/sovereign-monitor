@@ -1,2 +1,2 @@
 fired_at,severity,rule,scope,metric,detail
-2026-10-14,critical,staleness,bloomberg_rss,92.0,bloomberg_rss newest record is 92d old (threshold 2d)
+2026-10-15,critical,staleness,bloomberg_rss,93.0,bloomberg_rss newest record is 93d old (threshold 2d)
