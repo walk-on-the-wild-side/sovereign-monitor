@@ -1,3 +1,3 @@
 fired_at,severity,rule,scope,metric,detail
-2026-10-29,critical,input_drift,fx_UZB,1.029,PSI 1.03 on fx_UZB (recent vs baseline window)
-2026-10-29,critical,staleness,bloomberg_rss,107.0,bloomberg_rss newest record is 107d old (threshold 2d)
+2026-10-30,critical,input_drift,fx_UZB,1.006,PSI 1.01 on fx_UZB (recent vs baseline window)
+2026-10-30,critical,staleness,bloomberg_rss,108.0,bloomberg_rss newest record is 108d old (threshold 2d)
