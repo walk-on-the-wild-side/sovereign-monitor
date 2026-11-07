@@ -1,5 +1,5 @@
 fired_at,severity,rule,scope,metric,detail
-2026-11-06,critical,anomaly,em_oas,2.55,em_oas anomaly active (z=2.55)
-2026-11-06,critical,input_drift,fx_PAK,1.075,PSI 1.07 on fx_PAK (recent vs baseline window)
-2026-11-06,critical,input_drift,fx_UZB,1.028,PSI 1.03 on fx_UZB (recent vs baseline window)
-2026-11-06,critical,staleness,bloomberg_rss,115.0,bloomberg_rss newest record is 115d old (threshold 2d)
+2026-11-07,critical,anomaly,em_oas,2.87,em_oas anomaly active (z=2.87)
+2026-11-07,critical,input_drift,fx_PAK,1.163,PSI 1.16 on fx_PAK (recent vs baseline window)
+2026-11-07,critical,input_drift,fx_UZB,1.028,PSI 1.03 on fx_UZB (recent vs baseline window)
+2026-11-07,critical,staleness,bloomberg_rss,116.0,bloomberg_rss newest record is 116d old (threshold 2d)
