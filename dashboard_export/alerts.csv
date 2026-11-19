@@ -1,5 +1,5 @@
 fired_at,severity,rule,scope,metric,detail
-2026-11-18,critical,input_drift,fx_PAK,1.379,PSI 1.38 on fx_PAK (recent vs baseline window)
-2026-11-18,critical,input_drift,fx_UZB,1.254,PSI 1.25 on fx_UZB (recent vs baseline window)
-2026-11-18,critical,staleness,bloomberg_rss,127.0,bloomberg_rss newest record is 127d old (threshold 2d)
-2026-11-18,warning,input_drift,fx_LAO,0.558,PSI 0.56 on fx_LAO (recent vs baseline window)
+2026-11-19,critical,input_drift,fx_PAK,1.405,PSI 1.41 on fx_PAK (recent vs baseline window)
+2026-11-19,critical,input_drift,fx_UZB,1.254,PSI 1.25 on fx_UZB (recent vs baseline window)
+2026-11-19,critical,staleness,bloomberg_rss,128.0,bloomberg_rss newest record is 128d old (threshold 2d)
+2026-11-19,warning,input_drift,fx_LAO,0.517,PSI 0.52 on fx_LAO (recent vs baseline window)
